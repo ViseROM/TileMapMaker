@@ -4,20 +4,20 @@ import java.awt.Graphics2D;
 import java.awt.Color;
 
 /**
- * FadeToBlack class executes a fade to black transition animation
+ * FadeToWite class executes a fade to white transition animation
  * @author Vachia Thoj
  *
  */
-public class FadeToBlack extends Transition
+public class FadeToWhite extends Transition
 {
 	//x and y coordinate of Transition
 	private int x;
 	private int y;
 	
-	//For black color opacity
+	//For white color opacity
 	private int alpha;
 	
-	//Timer and delay for fade to black animation (length of each animation update)
+	//Timer and delay for fade to white animation (length of each animation update)
 	private long timer;
 	private long delay;
 	
@@ -30,7 +30,7 @@ public class FadeToBlack extends Transition
 	private static final int MAX_ALPHA = 255;
 	
 	//Constructor
-	public FadeToBlack(int width, int height)
+	public FadeToWhite(int width, int height)
 	{
 		super(width, height);
 		
@@ -43,15 +43,16 @@ public class FadeToBlack extends Transition
 		this.delay = 20;
 		
 		this.doneTimer = 0;
-		this.doneDelay = 250;
+		this.doneDelay = 500;
+		
 	}
 	
 	/**
-	 * Method that updates the fade to black transition
+	 * Method that updates the fade to white transition
 	 */
 	public void update()
 	{
-		//Execute fade to black transition if running
+		//Execute fade to white transition if running
 		if(running == true)
 		{
 			if(alpha >= MAX_ALPHA)
@@ -81,7 +82,7 @@ public class FadeToBlack extends Transition
 	}
 	
 	/**
-	 * Method that draws the fade to black transition
+	 * Method that draws the fade to white transition
 	 * 
 	 * @param g The Graphics2D object to be drawn on
 	 */
@@ -89,7 +90,7 @@ public class FadeToBlack extends Transition
 	{
 		if(running == true)
 		{
-			g.setColor(new Color(0, 0, 0, alpha));
+			g.setColor(new Color(255, 255, 255, alpha));
 			g.fillRect(x, y, width, height);
 		}
 	}

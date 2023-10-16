@@ -4,20 +4,20 @@ import java.awt.Graphics2D;
 import java.awt.Color;
 
 /**
- * FadeToBlack class executes a fade to black transition animation
+ * SlideLeft class executes a slide left transition animation
  * @author Vachia Thoj
  *
  */
-public class FadeToBlack extends Transition
+public class SlideLeft extends Transition
 {
 	//x and y coordinate of Transition
 	private int x;
 	private int y;
 	
-	//For black color opacity
-	private int alpha;
+	//The current width of the "rectangle" used for slide left transition
+	private int currentWidth;
 	
-	//Timer and delay for fade to black animation (length of each animation update)
+	//Timer and delay for slide left animation (length of each animation update)
 	private long timer;
 	private long delay;
 	
@@ -25,36 +25,36 @@ public class FadeToBlack extends Transition
 	private long doneTimer;
 	private long doneDelay;
 	
-	//min and max value of alpha (opacity)
-	private static final int MIN_ALPHA = 0;
-	private static final int MAX_ALPHA = 255;
+	//Color of the "rectangle"/transition 
+	private Color color;
 	
 	//Constructor
-	public FadeToBlack(int width, int height)
+	public SlideLeft(int width, int height)
 	{
 		super(width, height);
 		
-		this.x = 0;
+		this.currentWidth = 0;
+		this.x = width - currentWidth;
 		this.y = 0;
-		this.alpha = MIN_ALPHA;
-		this.speed = 10;
 		
+		this.speed = 20;
 		this.timer = System.nanoTime();
-		this.delay = 20;
+		this.delay = 10;
 		
 		this.doneTimer = 0;
-		this.doneDelay = 250;
+		this.doneDelay = 400;
+		
+		this.color = Color.BLACK;
 	}
 	
 	/**
-	 * Method that updates the fade to black transition
+	 * Method that updates the slide left transition
 	 */
 	public void update()
 	{
-		//Execute fade to black transition if running
 		if(running == true)
 		{
-			if(alpha >= MAX_ALPHA)
+			if(currentWidth >= width)
 			{
 				if(doneTimer == 0)
 				{
@@ -68,20 +68,16 @@ public class FadeToBlack extends Transition
 			}
 			else if(((System.nanoTime() - timer) / 1000000) > delay)
 			{
-				alpha = alpha + speed;
-				
-				if(alpha > MAX_ALPHA)
-				{
-					alpha = MAX_ALPHA;
-				}
-				
+				currentWidth = currentWidth + speed;
+				x = width - currentWidth;
 				timer = System.nanoTime();
 			}
+			
 		}
 	}
 	
 	/**
-	 * Method that draws the fade to black transition
+	 * Method that draws the slide left transition
 	 * 
 	 * @param g The Graphics2D object to be drawn on
 	 */
@@ -89,8 +85,8 @@ public class FadeToBlack extends Transition
 	{
 		if(running == true)
 		{
-			g.setColor(new Color(0, 0, 0, alpha));
-			g.fillRect(x, y, width, height);
+			g.setColor(color);
+			g.fillRect(x, y, currentWidth, height);
 		}
 	}
 }

@@ -9,13 +9,22 @@ import manager.MouseManager;
 import map.Tile;
 import helper.Collision;
 
+/**
+ * Palette class represents a palette to be used for the
+ * tile map maker
+ * @author Vachia Thoj
+ *
+ */
 public class Palette extends Entity
 {
 	//To manage mouse events
 	private MouseManager mouseManager;
 	
+	//Images
 	private BufferedImage[] images;
 	private int numImages;
+	
+	//For BufferedImage[] images index
 	private int start;
 	private int end;
 	private int currentImage;
@@ -23,6 +32,7 @@ public class Palette extends Entity
 	//Color of Palette
 	private Color color;
 	
+	//Tiles
 	private Tile tiles[];
 	
 	//Default color of Palette
@@ -30,13 +40,13 @@ public class Palette extends Entity
 	
 	/**
 	 * Constructor
-	 * @param x integer x coordinate
-	 * @param y integer y coordinate
-	 * @param width integer width of the Palette
-	 * @param height integer height of the Palette
-	 * @param images BufferedImages within Palette
+	 * @param x (int) x-coordinate of Palette
+	 * @param y (int) y-coordinate of Palette
+	 * @param width (int) width of the Palette
+	 * @param height (int) height of the Palette
+	 * @param images (BufferedImages[]) images within Palette
 	 */
-	public Palette(int x, int y, int width, int height, BufferedImage images[])
+	public Palette(int x, int y, int width, int height, BufferedImage[] images)
 	{
 		mouseManager = MouseManager.instance();
 		
@@ -56,13 +66,19 @@ public class Palette extends Entity
 		createTiles();
 	}
 	
+	/**
+	 * Method that "creates"/obtains tiles for the Palette
+	 */
 	private void createTiles()
 	{
+		//Initialize tiles
 		tiles = new Tile[images.length];
 		
+		//Determine x and y coordinates; to be used for tiles
 		int destX = x + 32;
 		int destY = y + 96;
 		
+		//Create tiles
 		for(int i = 0; i < images.length; i++)
 		{
 			tiles[i] = new Tile(destX, destY, images[i].getWidth(), images[i].getHeight(), i);
@@ -85,11 +101,17 @@ public class Palette extends Entity
 	public void setEnd(int end) {this.end = end;}
 	public void setColor(Color color) {this.color = color;}
 	
+	/**
+	 * Method that sets the range for tiles array
+	 * @param start (int) start index for tiles array
+	 * @param end (int) end index for tiles array
+	 */
 	public void setRange(int start, int end)
 	{
 		this.start = start;
 		this.end = end;
 		
+		//Determine x and y coordinates for tiles
 		int destX = tiles[0].getX() + tiles[0].getWidth() + 8;
 		int destY = tiles[0].getY();
 		
@@ -104,6 +126,9 @@ public class Palette extends Entity
 		currentImage = 0;
 	}
 	
+	/**
+	 * Method that updates the Palette
+	 */
 	public void update()
 	{		
 		int destX = tiles[0].getX() + tiles[0].getWidth() + 8;
@@ -120,14 +145,17 @@ public class Palette extends Entity
 		//Check if mouse clicked on an image
 		if(mouseManager.getPressedPoint() != null && mouseManager.getReleasedPoint() != null)
 		{
+			//Obtain x and y coordinates where the mouse pressed and release
 			int pressedX = mouseManager.getPressedPoint().getX();
 			int pressedY = mouseManager.getPressedPoint().getY();
 			int releasedX = mouseManager.getReleasedPoint().getX();
 			int releasedY = mouseManager.getReleasedPoint().getY();
 			
+			//Check if mouse clicked on tile[0]
 			if(Collision.pointEntityCollision(pressedX, pressedY, tiles[0]) &&
 			   Collision.pointEntityCollision(releasedX, releasedY, tiles[0]))
 			{
+				//Set currentImage to 0
 				currentImage = 0;
 				mouseManager.clearPressedPoint();
 				mouseManager.clearReleasedPoint();
@@ -136,9 +164,11 @@ public class Palette extends Entity
 			
 			for(int i = start; i <= end; i++)
 			{
+				//Check if mouse clicked on any of the tiles[]
 				if(Collision.pointEntityCollision(pressedX, pressedY, tiles[i]) &&
 				   Collision.pointEntityCollision(releasedX, releasedY, tiles[i]))
 				{
+					//Set currentImage to the image mouse clicked on
 					currentImage = i;
 					mouseManager.clearPressedPoint();
 					mouseManager.clearReleasedPoint();
@@ -148,6 +178,10 @@ public class Palette extends Entity
 		}
 	}
 	
+	/**
+	 * Method that draws images within Palette
+	 * @param g (Graphics2D) the Graphics2D object to be drawn on
+	 */
 	private void drawImages(Graphics2D g)
 	{
 		g.setColor(Color.BLACK);
@@ -155,6 +189,7 @@ public class Palette extends Entity
 		g.drawImage(images[0], tiles[0].getX(), tiles[0].getY(), null);
 		g.drawRect(tiles[0].getX(), tiles[0].getY(), tiles[0].getWidth(), tiles[0].getHeight());
 		
+		//Draw tile images
 		for(int i = start; i <= end; i++)
 		{
 			g.drawImage(images[i], tiles[i].getX(), tiles[i].getY(), null);
@@ -172,6 +207,10 @@ public class Palette extends Entity
 		g.setStroke(new BasicStroke(1));
 	}
 	
+	/**
+	 * Method that draws the currentImage
+	 * @param g (Graphics2D) the Graphics2D object to be drawn on
+	 */
 	private void drawCurrentImage(Graphics2D g)
 	{
 		g.drawImage(images[currentImage], 896, y + 96, null);
@@ -198,6 +237,10 @@ public class Palette extends Entity
 		g.drawRect(x, y, width, height);
 	}
 	
+	/**
+	 * Method that draws the Palette
+	 * @param g (Graphics2D) the Graphics2D object to be drawn on
+	 */
 	public void draw(Graphics2D g)
 	{
 		//Draw Palette

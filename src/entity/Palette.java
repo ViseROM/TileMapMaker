@@ -142,7 +142,7 @@ public class Palette extends Entity
 			destX = destX + tiles[i].getWidth() + 8;
 		}
 		
-		//Check if mouse clicked on an image
+		//Check if mouse clicked on a tile
 		if(mouseManager.getPressedPoint() != null && mouseManager.getReleasedPoint() != null)
 		{
 			//Obtain x and y coordinates where the mouse pressed and release

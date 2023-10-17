@@ -27,6 +27,9 @@ Author: Vachia Thoj
 - transition
 
 —— To Run Program Using an IDE —— Clone/download the project, then run the Main.java file to start program
-—— Code was originally written and executed using the Eclipse IDE ——
+
+—— Code was originally written and executed using the Eclipse IDE
+
 —— Code that references a file path may need to be modified depending on how the coding environment you used manages folders/directories
+
 —— Code was run with JDK version 15.0.2

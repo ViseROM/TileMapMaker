@@ -6,7 +6,6 @@ import java.awt.BasicStroke;
 import java.awt.image.BufferedImage;
 
 import manager.MouseManager;
-import map.Tile;
 import helper.Collision;
 
 /**

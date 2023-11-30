@@ -1,11 +1,13 @@
 package map;
 
-import java.io.Serializable;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
+import java.io.Serializable;
+import java.util.ArrayList;
 
 import entity.Camera;
 import entity.Tile;
+import graph.*;
 
 /**
  * TileMap class represents a map (Tile Map)
@@ -123,6 +125,10 @@ public class TileMap implements Serializable
 	public int getTileSize() {return tileSize;}
 	public int getNumCols() {return numCols;}
 	public int getNumRows() {return numRows;}
+	public int getStartCol() {return startCol;}
+	public int getEndCol() {return endCol;}
+	public int getStartRow() {return startRow;}
+	public int getEndRow() {return endRow;}
 	public Tile[][] getTileMap() {return map;}
 	public Tile getTile(int col, int row) {return map[row][col];}
 	
@@ -144,6 +150,27 @@ public class TileMap implements Serializable
 			if(changeCol > -1 && changeRow > -1)
 			{
 				map[changeRow][changeCol].setValue(value);
+			}
+		}
+	}
+	
+	public void fillTiles(int changeCol, int changeRow, int value)
+	{
+		if(value >= 0 && value < images.length)
+		{
+			if(changeCol > -1 && changeRow > -1)
+			{
+				Graph graph = new Graph(this);
+				FillPath fillPath = new FillPath(graph, changeCol, changeRow);
+				fillPath.bfs();
+				ArrayList<Node> nodesToFill = fillPath.getNodesToFill();
+				
+				for(int i = 0; i < nodesToFill.size(); i++)
+				{
+					Node tempNode = nodesToFill.get(i);
+					
+					map[tempNode.getRow()][tempNode.getCol()].setValue(value);
+				}
 			}
 		}
 	}

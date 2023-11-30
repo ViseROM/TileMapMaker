@@ -38,7 +38,7 @@ public class ControlsState extends State
 	//Transition
 	private FadeToBlack fadeToBlack;
 	
-	/*8
+	/**
 	 * Constructor
 	 */
 	public ControlsState()

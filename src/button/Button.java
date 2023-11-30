@@ -58,21 +58,20 @@ public abstract class Button extends Entity
 		if(mouseManager.getPressedPoint() != null && mouseManager.getReleasedPoint() != null)
 		{
 			//Obtain the coordinates where the mouse was pressed
-	    	int pressedX = mouseManager.getPressedPoint().getX();
-	    	int pressedY = mouseManager.getPressedPoint().getY();
-	    	
-	    	//Obtain the coordinates where the mouse was released
-	    	int releasedX = mouseManager.getReleasedPoint().getX();
-	    	int releasedY = mouseManager.getReleasedPoint().getY();
-	    	
-	    	//Check if mouse clicked (pressed and released) the Button
-	    	if(Collision.pointEntityCollision(pressedX, pressedY, this) && 
-	    	   Collision.pointEntityCollision(releasedX, releasedY, this))
-	    	{
-	    		return true;
-	    	}
+			int pressedX = mouseManager.getPressedPoint().getX();
+			int pressedY = mouseManager.getPressedPoint().getY();
+			
+			//Obtain the coordinates where the mouse was released
+			int releasedX = mouseManager.getReleasedPoint().getX();
+			int releasedY = mouseManager.getReleasedPoint().getY();
+			
+			//Check if mouse clicked (pressed and released) the Button
+			if(Collision.pointEntityCollision(pressedX, pressedY, this) &&
+			   Collision.pointEntityCollision(releasedX, releasedY, this))
+			{
+				return true;
+			}
 		}
-		
 		return false;
 	}
 	
@@ -108,17 +107,17 @@ public abstract class Button extends Entity
 	 */
 	public void checkIfMouseClickingButton()
 	{
-    	if(mouseManager.isMouseReleased() == true)
-    	{
-    		//Check if mouse is clicking button
-    		if(pressedAndReleased() == true)
-    		{
-    			mouseClickingButton = true;
-    			
-    			//Clear the pressed and released Points
-	    		mouseManager.clearPressedPoint();
-	    		mouseManager.clearReleasedPoint();
-    		}
-    	}
+		if(mouseManager.isMouseReleased() == true)
+		{
+			//Check if mouse is clicking button
+			if(pressedAndReleased() == true)
+			{
+				mouseClickingButton = true;
+				
+				//Clear the pressed and released Point
+				mouseManager.clearPressedPoint();
+				mouseManager.clearReleasedPoint();
+			}
+		}
 	}
 }

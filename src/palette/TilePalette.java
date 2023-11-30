@@ -184,23 +184,48 @@ public class TilePalette extends Palette
 	{
 		g.setColor(Color.BLACK);
 		
-		g.drawImage(images[0], tiles[0].getX(), tiles[0].getY(), null);
-		g.drawRect(tiles[0].getX(), tiles[0].getY(), tiles[0].getWidth() - 1, tiles[0].getHeight() - 1);
+		g.drawImage(
+				images[0],
+				tiles[0].getX(),
+				tiles[0].getY(),
+				null
+		);
+		
+		g.drawRect(
+				tiles[0].getX(),
+				tiles[0].getY(),
+				tiles[0].getWidth() - 1,
+				tiles[0].getHeight() - 1
+		);
 		
 		//Draw tile images
 		for(int i = start; i <= end; i++)
 		{
-			g.drawImage(images[i], tiles[i].getX(), tiles[i].getY(), null);
+			g.drawImage(
+					images[i],
+					tiles[i].getX(),
+					tiles[i].getY(),
+					null
+			);
 			
 			if(i != currentImage)
 			{
-				g.drawRect(tiles[i].getX(), tiles[i].getY(), tiles[i].getWidth() - 1, tiles[i].getHeight() - 1);
+				g.drawRect(
+						tiles[i].getX(),
+						tiles[i].getY(),
+						tiles[i].getWidth() - 1,
+						tiles[i].getHeight() - 1
+				);
 			}
 		}
 		
 		g.setColor(Color.RED);
-		g.drawRect(tiles[currentImage].getX(), tiles[currentImage].getY(), 
-				   tiles[currentImage].getWidth() - 1, tiles[currentImage].getHeight() - 1);
+		g.drawRect(
+				tiles[currentImage].getX(),
+				tiles[currentImage].getY(),
+				tiles[currentImage].getWidth() - 1,
+				tiles[currentImage].getHeight() - 1
+		);
 	}
 	
 	/**
@@ -209,10 +234,20 @@ public class TilePalette extends Palette
 	 */
 	private void drawCurrentImage(Graphics2D g)
 	{
-		g.drawImage(images[currentImage], x + GamePanel.WIDTH - 256, y + 32, null);
+		g.drawImage(
+				images[currentImage],
+				x + GamePanel.WIDTH - 256,
+				y + 32,
+				null
+		);
 		
 		g.setColor(Color.RED);
-		g.drawRect(x + GamePanel.WIDTH - 256, y + 32, images[currentImage].getWidth() - 1, images[currentImage].getHeight() - 1);
+		g.drawRect(
+				x + GamePanel.WIDTH - 256,
+				y + 32,
+				images[currentImage].getWidth() - 1,
+				images[currentImage].getHeight() - 1
+		);
 	}
 	
 	/**

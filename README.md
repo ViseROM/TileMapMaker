@@ -1,7 +1,7 @@
 # TileMapMaker
 Project Title: TileMapMaker
 
-Version/Date: 0.1 - October 2023
+Version/Date: 0.1
 
 Author: Vachia Thoj
 

@@ -15,37 +15,52 @@ public class ImageManager
 	//For singleton
 	private static ImageManager imageManager;
 	
-	//Images
-	private BufferedImage[] bigButtonImages;
-	private BufferedImage[] smallButtonImages;
-	private BufferedImage[] controlImages;
+	//BufferedImages
+	private BufferedImage[] hitboxImages;
 	private BufferedImage[] tileImages;
 	private BufferedImage[] itemImages;
+	private BufferedImage[] asciiImages;
+	private BufferedImage[] buttonImages;
+	private BufferedImage[] treeImages;
+	private BufferedImage[] bushImages;
+	private BufferedImage[] rockImages;
+	private BufferedImage[] structureImages;
+	private BufferedImage[] buildingImages;
+	private BufferedImage[] miscImages;
+	private BufferedImage[] tutorialImages;
 	
 	/**
-	 * Constructor (private)
+	 * Constructor
 	 */
 	private ImageManager()
 	{
 		//Load image sheets
-		BufferedImage bigButtonSheet = loadImage("/images/BigButtonSheet.png");
-		BufferedImage smallButtonSheet = loadImage("/images/SmallButtonSheet.png");
-		BufferedImage controlImageSheet = loadImage("/images/ControlsSheet.png");
+		BufferedImage hitboxSheet = loadImage("/images/HitboxSheet.png");
 		BufferedImage tileSheet = loadImage("/images/TileSheet.png");
 		BufferedImage itemSheet = loadImage("/images/ItemSheet.png");
+		BufferedImage asciiSheet = loadImage("/images/AsciiSheet.png");
+		BufferedImage buttonSheet = loadImage("/images/ButtonSheet.png");
+		BufferedImage treeSheet = loadImage("/images/TreeSheet.png");
+		BufferedImage bushSheet = loadImage("/images/BushSheet.png");
+		BufferedImage rockSheet = loadImage("/images/RockSheet.png");
+		BufferedImage structureSheet = loadImage("/images/StructureSheet.png");
+		BufferedImage buildingSheet = loadImage("/images/BuildingSheet.png");
+		BufferedImage miscSheet = loadImage("/images/MiscSheet.png");
+		BufferedImage tutorialSheet = loadImage("/images/TutorialSheet.png");
 		
-		//Obtain individual images from image sheets
-		loadBigButtonImages(bigButtonSheet);
-		loadSmallButtonImages(smallButtonSheet);
-		loadControlImages(controlImageSheet);
+		//Obtain individual images within each image sheet
+		loadHitboxImages(hitboxSheet);
 		loadTileImages(tileSheet);
 		loadItemImages(itemSheet);
-		
-		bigButtonSheet = null;
-		smallButtonSheet = null;
-		controlImageSheet = null;
-		tileSheet = null;
-		itemSheet = null;
+		loadAsciiImages(asciiSheet);
+		loadButtonImages(buttonSheet);
+		loadTreeImages(treeSheet);
+		loadBushImages(bushSheet);
+		loadRockImages(rockSheet);
+		loadStructureImages(structureSheet);
+		loadBuildingImages(buildingSheet);
+		loadMiscImages(miscSheet);
+		loadTutorialImages(tutorialSheet);
 	}
 	
 	/**
@@ -87,147 +102,210 @@ public class ImageManager
 		return null;
 	}
 	
-	/**
-	 * Method that obtains Big Button images from an image sheet
-	 * @param sheet (BufferedImage) an image sheet
-	 */
-	private void loadBigButtonImages(BufferedImage sheet)
-	{
-		bigButtonImages = new BufferedImage[10];
-		int index = 0;
-		
-		for(int i = 0; i < 2; i++)
-		{
-			for(int j = 0; j < 4; j++)
-			{
-				bigButtonImages[index] = sheet.getSubimage(j * 192, 48 * i, 192, 48);
-				++index;
-			}
-		}
-		
-		for(int i = 0; i < 2; i++)
-		{
-			bigButtonImages[index] = sheet.getSubimage(i * 192, 96, 192, 48);
-			++index;
-		}
-	}
-	
-	/**
-	 * Method that obtains Small Button images from an image sheet
-	 * @param sheet (BufferedImage) an image sheet
-	 */
-	private void loadSmallButtonImages(BufferedImage sheet)
-	{
-		smallButtonImages = new BufferedImage[30];
-		int index = 0;
-		
-		for(int i = 0; i < 2; i++)
-		{
-			for(int j = 0; j < 8; j++)
-			{
-				smallButtonImages[index] = sheet.getSubimage(j * 96, i * 32, 96, 32);
-				++index;
-			}
-		}
-		
-		for(int i = 0; i < 2; i++)
-		{
-			smallButtonImages[index] = sheet.getSubimage(i * 96, 64, 96, 32);
-			++index;
-		}
-		
-		for(int i = 0; i < 8; i++)
-		{
-			smallButtonImages[index] = sheet.getSubimage(i * 96, 96, 96, 32);
-			++index;
-		}
-		
-		for(int i = 0; i < 4; i++)
-		{
-			smallButtonImages[index] = sheet.getSubimage(i * 32, 128, 32, 32);
-			++index;
-		}
-	}
-	
-	/**
-	 * Method that obtains Control images from an image sheet
-	 * @param sheet (BufferedImage) an image sheet
-	 */
-	private void loadControlImages(BufferedImage sheet)
-	{
-		controlImages = new BufferedImage[4];
-		int index = 0;
-		
-		for(int i = 0; i < 2; i++)
-		{
-			for(int j = 0; j < 2; j++)
-			{
-				controlImages[index] = sheet.getSubimage(j * 320, 160 * i, 320, 160);
-				++index;
-			}
-		}
-	}
-	
-	/**
-	 * Method that obtains Tile images from an image sheet
-	 * @param sheet (BufferedImage) an image sheet
-	 */
 	private void loadTileImages(BufferedImage sheet)
 	{
-		tileImages = new BufferedImage[42];
-		int index = 0;
+		tileImages = new BufferedImage[59];
+		tileImages[0] = hitboxImages[0];
 		
-		for(int i = 0; i < 6; i++)
+		int index = 1;
+		for(int i = 0; i < 4; i++)
 		{
-			tileImages[index] = sheet.getSubimage(i * 32, 0, 32, 32);
-			++index;
+			for(int j = 0; j < 14; j++)
+			{
+				tileImages[index] = sheet.getSubimage(j * 16, i * 16, 16, 16);
+				++index;
+			}
 		}
 		
-		for(int i = 0; i < 14; i++)
+		for(int i = 0; i < 2; i++)
 		{
-			tileImages[index] = sheet.getSubimage(i * 32, 32, 32, 32);
-			++index;
-		}
-		
-		for(int i = 0; i < 13; i++)
-		{
-			tileImages[index] = sheet.getSubimage(i * 32, 64, 32, 32);
-			++index;
-		}
-		
-		for(int i = 0; i < 6; i++)
-		{
-			tileImages[index] = sheet.getSubimage(i * 32, 96, 32, 32);
-			++index;
-		}
-		
-		for(int i = 0; i < 3; i++)
-		{
-			tileImages[index] = sheet.getSubimage(i * 32, 128, 32, 32);
+			tileImages[index] = sheet.getSubimage(i * 16, 64, 16, 16);
 			++index;
 		}
 	}
 	
-	/**
-	 * Method that obtains Item images from an image sheet
-	 * @param sheet (BufferedImage) an image sheet
-	 */
 	private void loadItemImages(BufferedImage sheet)
 	{
-		itemImages = new BufferedImage[4];
+		itemImages = new BufferedImage[29];
+		itemImages[0] = hitboxImages[0];
+		
+		int index = 1;
+		for(int i = 0; i < 2; i++)
+		{
+			for(int j = 0; j < 14; j++)
+			{
+				itemImages[index] = sheet.getSubimage(j * 16, i * 16, 16, 16);
+				++index;
+			}
+		}
+	}
+	
+	private void loadHitboxImages(BufferedImage sheet)
+	{
+		hitboxImages = new BufferedImage[2];
 		int index = 0;
 		
-		for(int i = 0; i < 4; i++)
+		for(int i = 0;i < 2; i++)
 		{
-			itemImages[index] = sheet.getSubimage(i * 32, 0, 32, 32);
+			hitboxImages[index] = sheet.getSubimage(i * 16, 0, 16, 16);
 			++index;
 		}
 	}
-
+	
+	private void loadAsciiImages(BufferedImage sheet)
+	{
+		asciiImages = new BufferedImage[43];
+		
+		int index = 0;
+		for(int i = 0; i < 3; i++)
+		{
+			for(int j = 0; j < 13; j++)
+			{
+				if(index == 0)
+				{
+					asciiImages[index] = sheet.getSubimage(j * 6, i * 9, 4, 9);
+				}
+				else
+				{
+					asciiImages[index] = sheet.getSubimage(j * 6, i * 9, 6, 9);
+				}
+				
+				++index;
+				
+			}
+		}
+		
+		for(int i = 0; i < 4; i++)
+		{
+			asciiImages[index] = sheet.getSubimage(i * 6, 27, 6, 9);
+			++index;
+		}
+			
+	}
+	
+	private void loadButtonImages(BufferedImage sheet)
+	{
+		buttonImages = new BufferedImage[13];
+		int index = 0;
+		for(int i = 0; i < 2; i++)
+		{
+			buttonImages[index] = sheet.getSubimage(i * 80, 0, 80, 16);
+			++index;
+		}
+		
+		for(int i = 0; i < 2; i++)
+		{
+			buttonImages[index] = sheet.getSubimage(i * 64, 16, 64, 16);
+			++index;
+		}
+		
+		for(int i = 0; i < 7; i++)
+		{
+			buttonImages[index] = sheet.getSubimage(i * 16, 32, 16, 16);
+			++index;
+		}
+		
+		buttonImages[11] = sheet.getSubimage(0, 48, 320, 64);
+		buttonImages[12] = sheet.getSubimage(0, 112, 320, 64);
+	}
+	
+	private void loadTreeImages(BufferedImage sheet)
+	{
+		treeImages = new BufferedImage[5];
+		
+		treeImages[0] = hitboxImages[0];
+		treeImages[1] = sheet.getSubimage(0, 0, 16, 32);
+		treeImages[2] = sheet.getSubimage(16, 0, 16, 32);
+		treeImages[3] = sheet.getSubimage(32, 0, 32, 32);
+		treeImages[4] = sheet.getSubimage(64, 0, 32, 32);
+	}
+	
+	private void loadBushImages(BufferedImage sheet)
+	{
+		bushImages = new BufferedImage[4];
+		
+		bushImages[0] = hitboxImages[0];
+		int index = 1;
+		for(int i = 0; i < 3; i++)
+		{
+			bushImages[index] = sheet.getSubimage(i * 16, 0, 16, 16);
+			++index;
+		}
+	}
+	
+	private void loadRockImages(BufferedImage sheet)
+	{
+		rockImages = new BufferedImage[3];
+		
+		rockImages[0] = hitboxImages[0];
+		rockImages[1] = sheet.getSubimage(0, 0, 16, 16);
+		rockImages[2] = sheet.getSubimage(16, 0, 16, 16);
+	}
+	
+	private void loadStructureImages(BufferedImage sheet)
+	{
+		structureImages = new BufferedImage[10];
+		
+		structureImages[0] = hitboxImages[0];
+		structureImages[1] = sheet.getSubimage(0, 0, 16, 16);
+		structureImages[2] = sheet.getSubimage(16, 0, 16, 16);
+		structureImages[3] = sheet.getSubimage(32, 0, 32, 16);
+		structureImages[4] = sheet.getSubimage(64, 0, 32, 16);
+		structureImages[5] = sheet.getSubimage(96, 0, 16, 32);
+		structureImages[6] = sheet.getSubimage(112, 0, 16, 32);
+		structureImages[7] = sheet.getSubimage(128, 0, 16, 32);
+		structureImages[8] = sheet.getSubimage(144, 0, 32, 32);
+		structureImages[9] = sheet.getSubimage(176, 0, 32, 32);
+	}
+	
+	private void loadBuildingImages(BufferedImage sheet)
+	{
+		buildingImages = new BufferedImage[3];
+		
+		buildingImages[0] = hitboxImages[0];
+		buildingImages[1] = sheet.getSubimage(0, 0, 48, 48);
+		buildingImages[2] = sheet.getSubimage(48, 0, 32, 48);
+	}
+	
+	private void loadMiscImages(BufferedImage sheet)
+	{
+		miscImages = new BufferedImage[2];
+		
+		miscImages[0] = hitboxImages[0];
+		miscImages[1] = sheet.getSubimage(0, 0, 16, 16);
+	}
+	
+	private void loadTutorialImages(BufferedImage sheet)
+	{
+		tutorialImages = new BufferedImage[3];
+		
+		for(int i = 0; i < tutorialImages.length; i++)
+		{
+			tutorialImages[i] = sheet.getSubimage(0, i * 128, 256, 128);
+		}
+	}
+	
 	//Getter methods
-	public BufferedImage[] getBigButtonImages() {return bigButtonImages;}
-	public BufferedImage[] getSmallButtonImages() {return smallButtonImages;}
-	public BufferedImage[] getControlImages() {return controlImages;}
+	public BufferedImage[] getHitboxImages() {return hitboxImages;}
 	public BufferedImage[] getTileImages() {return tileImages;}
 	public BufferedImage[] getItemImages() {return itemImages;}
+	public BufferedImage[] getAsciiImages() {return asciiImages;}
+	public BufferedImage[] getButtonImages() {return buttonImages;}
+	public BufferedImage[] getTreeImages() {return treeImages;}
+	public BufferedImage[] getBushImages() {return bushImages;}
+	public BufferedImage[] getRockImages() {return rockImages;}
+	public BufferedImage[] getStructureImages() {return structureImages;}
+	public BufferedImage[] getBuildingImages() {return buildingImages;}
+	public BufferedImage[] getMiscImages() {return miscImages;}
+	public BufferedImage[] getTutorialImages() {return tutorialImages;}
+	
+	public BufferedImage getAsciiImage(int index) 
+	{
+		if(index < 0 || index > 42)
+		{
+			return null;
+		}
+		
+		return asciiImages[index];
+	}
 }

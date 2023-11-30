@@ -1,12 +1,8 @@
 package manager;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import map.TileMap;
+import date.*;
+import map.*;
+import save.*;
 
 /**
  * SaveManager class manages save files
@@ -15,34 +11,101 @@ import map.TileMap;
  */
 public class SaveManager 
 {
-	//For singleton
+	//Singleton
 	private static SaveManager saveManager;
 	
-	//TileMaps
-	private TileMap layer1;
-	private TileMap layer2;
-	private TileMap collisionLayer;
-	private TileMap itemLayer;
+	//Save files
+	private SaveFile[] saveFiles;
 	
-	//Flag to see if data has been saved
-	private boolean saved;
+	//The current save file
+	private SaveFile currentSaveFile;
 	
+	//Maximum number of save files
+	private static final int MAX_SAVE_FILES = 4;
+
 	/**
-	 * Constructor (private)
+	 * Constructor
 	 */
 	private SaveManager()
 	{
-		this.layer1 = null;
-		this.layer2 = null;
-		this.collisionLayer = null;
-		this.itemLayer = null;
-		
-		this.saved = false;
+		createSaveFiles();
+		this.currentSaveFile = null;
+	}
+	
+	private void createSaveFiles()
+	{
+		saveFiles = new SaveFile[MAX_SAVE_FILES];
+		for(int i = 0; i < saveFiles.length; i++)
+		{
+			//Save file paths
+			String tileMapFilePath = "/saves" + "/file" + (i + 1) + "/TileMap.ser";
+			String objectMapFilePath = "/saves" + "/file" + (i + 1) + "/ObjectMap.ser";
+			String itemMapFilePath = "/saves" + "/file" + (i + 1) + "/ItemMap.ser";
+			String hitboxMapFilePath = "/saves" + "/file" + (i + 1) + "/HitboxMap.ser";
+			String saveDateFilePath = "/saves" + "/file" + (i + 1) + "/SaveDate.ser";
+			
+			saveFiles[i] = new SaveFile(
+					i,
+					tileMapFilePath,
+					objectMapFilePath,
+					itemMapFilePath,
+					hitboxMapFilePath,
+					saveDateFilePath
+			);
+			
+			//Load save files
+			saveFiles[i].load();
+		}
 	}
 	
 	/**
-	 * Method to be called in order to obtain SaveManager object (Singleton)
-	 * @return SaveManager object
+	 * Method that attempts to save a file
+	 * @param id (int) The id of the save file
+	 * @param tileMap (TileMap) The tileMap to be saved
+	 * @param objectMap (ObjectMap) The objectMap to be saved
+	 * @param itemMap (TileMap) The itemMap to be saved
+	 * @param hitboxMap (TileMap) The hitboxMap to be saved
+	 * @param saveDate (Date) The date of the save was created
+	 */
+	public void save(int id, TileMap tileMap, ObjectMap objectMap, TileMap itemMap, TileMap hitboxMap, Date saveDate)
+	{
+		if(id > -1 && id < MAX_SAVE_FILES)
+		{
+			saveFiles[id].save(tileMap, objectMap, itemMap, hitboxMap, saveDate);
+			currentSaveFile = saveFiles[id];
+		}
+	}
+	
+	/**
+	 * Method that loads all save files into memory
+	 */
+	public void loadAll()
+	{
+		for(int i = 0; i < saveFiles.length; i++)
+		{
+			saveFiles[i].load();
+		}
+	}
+	
+	/**
+	 * Method that loads a save file
+	 * @param id (int) The id of the save file to load
+	 */
+	public void load(int id)
+	{
+		if(id > -1 && id < MAX_SAVE_FILES)
+		{
+			//Load a save file
+			saveFiles[id].load();
+			
+			//Set the loaded save file as the current save file
+			currentSaveFile = saveFiles[id];
+		}
+	}
+	
+	/**
+	 * Method to be called to obtain SaveManager object (Singleton)
+	 * @return SaveManager object 
 	 */
 	public static SaveManager instance()
 	{
@@ -55,101 +118,19 @@ public class SaveManager
 	}
 	
 	//Getter methods
-	public TileMap getLayer1() {return layer1;}
-	public TileMap getLayer2() {return layer2;}
-	public TileMap getCollisionLayer() {return collisionLayer;}
-	public TileMap getItemLayer() {return itemLayer;}
+	public SaveFile getCurrentSaveFile() {return currentSaveFile;}
+	public SaveFile[] getSaveFiles() {return saveFiles;}
 	
-	public boolean isSaved() {return saved;}
+	public SaveFile getSaveFile(int id)
+	{
+		if(id > -1 && id < MAX_SAVE_FILES)
+		{
+			return saveFiles[id];
+		}
+		
+		return null;
+	}
 	
 	//Setter methods
-	public void setLayer1(TileMap layer1) {this.layer1 = layer1;}
-	public void setLayer2(TileMap layer2) {this.layer2 = layer2;}
-	public void setCollisionLayer(TileMap collisionLayer) {this.collisionLayer = collisionLayer;}
-	public void setItemLayer(TileMap itemLayer) {this.itemLayer = itemLayer;}
-	public void setSaved(boolean b) {this.saved = b;}
-	
-	/**
-	 * Method that attempts to load save files
-	 */
-	public void load()
-	{
-		try {
-			
-			//Obtain files as streams
-			InputStream layer1Stream = getClass().getResourceAsStream("/saves/Layer1.txt");
-			InputStream layer2Stream = getClass().getResourceAsStream("/saves/Layer2.txt");
-			InputStream collisionLayerStream = getClass().getResourceAsStream("/saves/CollisionLayer.txt");
-			InputStream itemLayerStream = getClass().getResourceAsStream("/saves/ItemLayer.txt");
-			
-			if(layer1Stream == null || layer2Stream == null || collisionLayerStream == null || itemLayerStream == null)
-			{		
-				System.out.println("Failed to load file");
-				return; 
-			}
-			
-			//Convert files to TileMap objects
-			ObjectInputStream ios = new ObjectInputStream(layer1Stream);
-			this.layer1 = (TileMap) ios.readObject();
-			
-			ios = new ObjectInputStream(layer2Stream); 
-			this.layer2 = (TileMap) ios.readObject();
-			
-			ios = new ObjectInputStream(collisionLayerStream);
-			this.collisionLayer = (TileMap) ios.readObject();
-			
-			ios = new ObjectInputStream(itemLayerStream);
-			this.itemLayer = (TileMap) ios.readObject();
-			
-			//Close streams
-			layer1Stream.close();
-			layer2Stream.close();
-			collisionLayerStream.close();
-			itemLayerStream.close();
-			ios.close();
-			
-		}catch(IOException e) {
-			e.printStackTrace();
-		}catch(ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Method that attempts to save TileMaps to files
-	 * @param layer1 (TileMap) a TileMap
-	 * @param layer2 (TileMap) a TileMap
-	 * @param collisionLayer (TileMap) a TileMap
-	 * @param itemLayer (TileMap) a TileMap
-	 */
-	public void save(TileMap layer1, TileMap layer2, TileMap collisionLayer, TileMap itemLayer)
-	{
-		try {
-			
-			//Save tileMap; Write TileMap objects to files
-			FileOutputStream file = new FileOutputStream("./resources/saves/Layer1.txt");
-			ObjectOutputStream out = new ObjectOutputStream(file);
-			out.writeObject(layer1);
-			
-			file = new FileOutputStream("./resources/saves/Layer2.txt");
-			out = new ObjectOutputStream(file);
-			out.writeObject(layer2);
-			
-			file = new FileOutputStream("./resources/saves/CollisionLayer.txt");
-			out = new ObjectOutputStream(file);
-			out.writeObject(collisionLayer);
-			
-			file = new FileOutputStream("./resources/saves/ItemLayer.txt");
-			out = new ObjectOutputStream(file);
-			out.writeObject(itemLayer);
-			
-			file.close();
-			out.close();
-			
-			saved = true;
-			
-		}catch(IOException e) {
-			e.printStackTrace();
-		}
-	}
+	public void setCurrentSaveFile(SaveFile currentSaveFile) {this.currentSaveFile = currentSaveFile;}
 }

@@ -5,11 +5,12 @@ import java.awt.Graphics2D;
 import state.*;
 
 /**
- * StateManager class manages the different possible States
+ * StateManager class manages the flow of states
+ * (State Design Pattern)
  * @author Vachia Thoj
  *
  */
-public class StateManager 
+public class StateManager
 {
 	//For singleton
 	private static StateManager stateManager;
@@ -22,7 +23,7 @@ public class StateManager
 	 */
 	private StateManager()
 	{
-		currentState = new MenuState();
+		this.currentState = new MainState();
 	}
 	
 	/**
@@ -40,21 +41,24 @@ public class StateManager
 	}
 	
 	/**
-	 * Method that attempts to go to the next state
-	 * @param stateType (StateType) The State to go to
+	 * Method that goes to the next state
+	 * @param nextState (StateType) The next state to go to
 	 */
-	public void nextState(StateType stateType)
+	public void nextState(StateType nextState)
 	{
-		switch(stateType)
+		switch(nextState)
 		{
-			case MENU_STATE:	//Go to MenuState
-				currentState = new MenuState();
+			case MAIN:
+				currentState = new MainState();
 				break;
-			case PLAY_STATE:	//Go to PlayState
-				currentState = new PlayState();
+			case SAVE:
+				currentState = new SaveState();
 				break;
-			case CONTROLS_STATE:	//Go to ControlState
+			case CONTROLS:
 				currentState = new ControlsState();
+				break;
+			case PLAY:
+				currentState = new PlayState();
 				break;
 			default:
 				break;

@@ -1,117 +1,155 @@
 package state;
 
-import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.Font;
 
-import manager.ImageManager;
-import manager.StateManager;
-import manager.TransitionManager;
+import button.ImageButton;
+import entity.Text;
 import main.GamePanel;
-import transition.TransitionType;
-import entity.Button;
-import helper.TextSize;
+import manager.ImageManager;
+import manager.MouseManager;
+import manager.StateManager;
+import transition.*;
 
 /**
- * Controls class explains to the user the control scheme for the program
+ * ControlsState class shows the possible controls for the program
  * @author Vachia Thoj
  *
  */
-public class ControlsState extends State
+public class ControlsState extends State 
 {
-	//To manage images
+	//ImageManager
 	private ImageManager imageManager;
 	
-	//To manager Transitions
-	private TransitionManager transitionManager;
-	
-	//Buttons
-	private Button menuButton;
+	//The next state to go to
+	private StateType nextState;
 	
 	//Tutorial images
 	private BufferedImage[] tutorialImages;
 	
-	//Strings
-	private String title;
-	private String mouse;
-	private String arrows;
-	private String shift;
+	//Texts
+	private Text title;
+	private Text[] tutorialTexts;
 	
-	//Next State to go to
-	private StateType nextState;
+	//Buttons
+	private ImageButton backButton;
 	
-	/**
+	//Transition
+	private FadeToBlack fadeToBlack;
+	
+	/*8
 	 * Constructor
 	 */
 	public ControlsState()
 	{
-		//Managers
 		this.imageManager = ImageManager.instance();
-		this.transitionManager = new TransitionManager(GamePanel.WIDTH, GamePanel.HEIGHT);
-		this.transitionManager.setTransition(TransitionType.FADE_TO_BLACK);
-		
-		//Strings
-		this.title = "CONTROLS";
-		this.mouse = "Mouse Click: click on map to place a tile";
-		this.arrows = "Arrow Keys: press arrows keys to move the map";
-		this.shift = "Shift + Mouse: hold SHIFT and move mouse for fast tile placement";
-		
-		//Create Buttons
-		createButtons();
-		
-		//Obtain tutorial images
-		this.tutorialImages = imageManager.getControlImages();
 		
 		this.nextState = null;
+		
+		this.tutorialImages = imageManager.getTutorialImages();
+		
+		//Initialize and set various objects and variables
+		createButtons();
+		createTexts();
+		createTransitions();
 	}
 	
-	/**
-	 * Method that initializes/creates Buttons
-	 */
+////////////////////////////////////////////// CREATE METHODS //////////////////////////////////////////////
 	private void createButtons()
 	{
-		//Obtain button images
-		BufferedImage[] buttonImages = imageManager.getBigButtonImages();
-		
-		//Menu Button
-		menuButton = new Button(buttonImages[8], buttonImages[9]);
-		menuButton.setX((GamePanel.WIDTH / 2) - (menuButton.getWidth() / 2));
-		menuButton.setY(GamePanel.HEIGHT - (menuButton.getHeight() * 2));
+		BufferedImage[] buttonImages = imageManager.getButtonImages(); 
+		backButton = new ImageButton(
+				(GamePanel.WIDTH / 2) - (buttonImages[0].getWidth() / 2),
+				GamePanel.HEIGHT - (buttonImages[0].getHeight() + 4),
+				buttonImages[0].getWidth(),
+				buttonImages[0].getHeight(),
+				buttonImages[0],
+				buttonImages[1],
+				"BACK"
+		);
 	}
 	
+	private void createTexts()
+	{
+		title = new Text("CONTROLS");
+		title.changeScale(2);
+		title.setX((GamePanel.WIDTH / 2) - (title.getWidth() / 2));
+		title.setY(8);
+		tutorialTexts = new Text[4];
+		
+		tutorialTexts[0] = new Text("CLICK MOUSE TO PLACE A TILE");
+		tutorialTexts[0].setX(72);
+		tutorialTexts[0].setY(40);
+		tutorialTexts[1] = new Text("HOLD SHIFT AND MOVE MOUSE TO");
+		tutorialTexts[1].setX(328);
+		tutorialTexts[1].setY(40);
+		tutorialTexts[2] = new Text("QUICKLY PLACE TILES");
+		tutorialTexts[2].setX(328);
+		tutorialTexts[2].setY(50);
+		
+		tutorialTexts[3] = new Text("PRESS ARROW KEYS TO MOVE MAP");
+		tutorialTexts[3].setX(72);
+		tutorialTexts[3].setY(184);
+	}
+	
+	private void createTransitions()
+	{
+		this.fadeToBlack = new FadeToBlack(GamePanel.WIDTH, GamePanel.HEIGHT);
+	}
+	
+////////////////////////////////////////////// UPDATE METHODS //////////////////////////////////////////////
+	
 	/**
-	 * Method that updates Buttons
+	 * Method that updates the Buttons
 	 */
 	private void updateButtons()
 	{
-		menuButton.update();
+		backButton.update();
+		
+		//Perform an action if a Button has been clicked on
+		performButtonAction();
 	}
 	
 	/**
-	 * Method that disable Buttons
+	 * Method that performs an action if a Button has been clicked on
 	 */
-	private void disableButtons()
+	private void performButtonAction()
 	{
-		menuButton.setDisabled(true);
-	}
-	
-	/**
-	 * Method that performs an action when a Button has been clicked on
-	 */
-	private void buttonActions()
-	{
-		if(menuButton.isMouseClickingButton()) //If menuButton has been clicked
+		if(backButton.isMouseClickingButton())
 		{
-			menuButton.setMouseClickingButton(false);
+			backButton.setMouseClickingButton(false);
 			
-			disableButtons();
+			//Run the fadeToBlack transition
+			fadeToBlack.setRunning(true);
 			
-			//Start transition
-			transitionManager.startTransition();
+			//Indicate that the next state to go to is the MainState
+			nextState = StateType.MAIN;
+		}
+	}
+	
+	/**
+	 * Method that updates the Transitions
+	 */
+	private void updateTransitions()
+	{
+		fadeToBlack.update();
+	}
+	
+	/**
+	 * Method that checks if a change of state is necessary
+	 */
+	private void changeState()
+	{
+		//If fadeToBlack transition is done and
+		//a next state has been decided..
+		if(fadeToBlack.isDone() && nextState != null)
+		{
+			MouseManager.instance().clearPressedPoint();
+			MouseManager.instance().clearReleasedPoint();
 			
-			//Indicate the next State to go to; MenuState
-			nextState = StateType.MENU_STATE;
+			//Go to the next state
+			StateManager.instance().nextState(nextState);
 		}
 	}
 	
@@ -120,118 +158,88 @@ public class ControlsState extends State
 	 */
 	public void update()
 	{
-		//Update Buttons
-		updateButtons();
-		
-		if(transitionManager.isDone())
+		updateTransitions();
+		if(fadeToBlack.isRunning())
 		{
-			if(nextState != null)
-			{
-				//Go to next State
-				StateManager.instance().nextState(nextState);
-				return;
-			}
-		}
-		
-		//Update Transition if Transition is running
-		if(transitionManager.isRunning())
-		{
-			transitionManager.update();
 			return;
 		}
 		
-		//Perform Button actions if necessary
-		buttonActions();
+		changeState();
+		updateButtons();
 	}
+////////////////////////////////////////////// DRAW METHODS //////////////////////////////////////////////
 	
 	/**
 	 * Method that draws the background
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
 	private void drawBackground(Graphics2D g)
 	{
-		g.setColor(Color.WHITE);
+		g.setColor(new Color(245, 245, 245));
 		g.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
-	}
+	}	
 	
 	/**
-	 * Method that draws the Strings
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * Method that draws the Transitions
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
-	private void drawStrings(Graphics2D g)
+	private void drawTransitions(Graphics2D g)
 	{
-		g.setColor(Color.BLACK);
-		
-		//Draw title
-		g.setFont(new Font("Courier New", Font.BOLD, 32));
-		int titleWidth = TextSize.getTextWidth(title, g);
-		g.drawString(title, (GamePanel.WIDTH / 2) - (titleWidth / 2), 48);
-		
-		//Draw Strings
-		g.setFont(new Font("Courier New", Font.BOLD, 20));
-		g.drawString(mouse, 400, 120);
-		g.drawString(arrows, 400, 278);
-		g.drawString(shift, 400, 436);
+		fadeToBlack.draw(g);
 	}
 	
 	/**
-	 * Method that draws the Tutorial images
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * Method that draws the tutorial images
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
 	private void drawTutorials(Graphics2D g)
 	{
-		//Draw tutorial images
-		g.drawImage(tutorialImages[1], 32, 96, null);
-		g.drawImage(tutorialImages[2], 32, 254, null);
-		g.drawImage(tutorialImages[3], 32, 412, null);
+		g.drawImage(tutorialImages[0], 64, 32, null);
+		g.drawImage(tutorialImages[1], 320, 32, null);
+		g.drawImage(tutorialImages[2], 64, 176, null);
+	}
+	
+	/**
+	 * Method that draws the title text
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawTitleText(Graphics2D g)
+	{
+		title.draw(g);
+	}
+	
+	/**
+	 * Method that draws the tutorial texts
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawTutorialTexts(Graphics2D g)
+	{
+		for(int i = 0; i < tutorialTexts.length; i++)
+		{
+			tutorialTexts[i].draw(g);
+		}
 	}
 	
 	/**
 	 * Method that draws the Buttons
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
 	private void drawButtons(Graphics2D g)
 	{
-		menuButton.draw(g);
-	}
-	
-	/**
-	 * Method that draws the transition
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
-	 */
-	private void drawTransition(Graphics2D g)
-	{
-		if(transitionManager.isRunning())
-		{
-			transitionManager.draw(g);
-		}
+		backButton.draw(g);
 	}
 	
 	/**
 	 * Method that draws the ControlsState
-	 * @param g (graphics2D) The Graphics2D object to be drawn on
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
 	public void draw(Graphics2D g)
 	{
-		//Draw background
 		drawBackground(g);
-		
-		//Draw Strings
-		drawStrings(g);
-		
-		//Draw tutorial images
 		drawTutorials(g);
-		
-		//Draw Buttons
+		drawTitleText(g);
+		drawTutorialTexts(g);
 		drawButtons(g);
-		
-		if(transitionManager.isDone())
-		{
-			g.setColor(Color.BLACK);
-			g.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
-		}
-		
-		//Draw Transition
-		drawTransition(g);
+		drawTransitions(g);
 	}
 }

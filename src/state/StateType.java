@@ -1,12 +1,15 @@
 package state;
+
 /**
- * Enum to represent different States
+ * Enum to define different states
+ * To be used with State subclasses
  * @author Vachia Thoj
  *
  */
 public enum StateType 
 {
-	MENU_STATE,		//MenuState
-	PLAY_STATE,		//PlayState
-	CONTROLS_STATE	//ControlState
+	MAIN,
+	SAVE,
+	CONTROLS,
+	PLAY;
 }

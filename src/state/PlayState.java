@@ -1,462 +1,939 @@
 package state;
 
-import java.awt.Graphics2D;
 import java.awt.Color;
-import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
+import button.*;
+import entity.*;
 import main.GamePanel;
 import manager.ImageManager;
+import manager.MouseManager;
 import manager.SaveManager;
 import manager.StateManager;
-import manager.TransitionManager;
-import entity.Camera;
-import entity.Palette;
-import helper.TextSize;
-import entity.Button;
-import entity.VisibleIcon;
-import map.TileMap;
-import map.MapUtility;
-import transition.TransitionType;
-
-
+import map.*;
+import menu.*;
+import palette.ObjectPalette;
+import palette.Palette;
+import palette.TilePalette;
+import transition.*;
 
 /**
- * PlayState class represents the "play area" of the game 
- * This is where the user sees the game being played
+ * PlayState class represents the "play area" of Tile Map Maker 
  * 
  * @author Vachia Thoj
  *
  */
 public class PlayState extends State
-{	
-	//To manage images
+{
+	//Managers
 	private ImageManager imageManager;
-	
-	//To manage saves
 	private SaveManager saveManager;
 	
-	//To manage Transition
-	private TransitionManager transitionManager;
+	//The next state to go to
+	private StateType nextState;
 	
-	//TileMaps
+	//Maps
 	private TileMap backgroundMap;
-	private TileMap[] layers;
-	private TileMap currentLayer;
+	private TileMap tileMap;
+	private ObjectMap objectMap;
+	private TileMap itemMap;
+	private TileMap hitboxMap;
 	
 	//Camera
 	private Camera camera;
 	
+	//MapHelper
+	private MapHelper mapHelper;
+	
 	//Palettes
-	private Palette tilePalette;
-	private Palette itemPalette;
+	private TilePalette tilePalette;
+	private ObjectPalette objectPalette;
+	private TilePalette itemPalette;
+	private TilePalette hitboxPalette;
 	private Palette currentPalette;
 	
-	//MapUtility
-	private MapUtility mapUtility;
+	//VisionIcons
+	private VisionIcon[] visionIcons;
 	
 	//Buttons
-	private Button waterButton;
-	private Button pathsButton;
-	private Button grassButton;
-	private Button plantsButton;
-	private Button otherButton;
-	private Button itemsButton;
-	private Button gridButton;
-	private Button saveButton;
-	private Button menuButton;
-	private VisibleIcon[] visibleIcons;
-	private Button[] layerButtons;
+	private ImageButton tileLayerButton;
+	private ImageButton objectLayerButton;
+	private ImageButton itemLayerButton;
+	private ImageButton hitboxLayerButton;
+	private ImageButton gridButton;
+	private ImageButton saveButton;
+	private ImageButton mainButton;
+	private ImageButton grassButton;
+	private ImageButton pathButton;
+	private ImageButton wallButton;
+	private ImageButton waterButton;
+	private ImageButton allButton;
+	private ImageButton treeButton;
+	private ImageButton bushButton;
+	private ImageButton rockButton;
+	private ImageButton structureButton;
+	private ImageButton buildingButton;
+	private ImageButton miscButton;
+	private ImageButton itemButton;
+	private ImageButton hitboxButton;
 	
-	private StateType nextState;
+	private CustomIcon arrowIcon;
+	private CustomIcon fillIcon;
 	
-	private String[] layerTexts;
-	private String currentLayerText;
+	//Texts
+	private Text currentLocationText;
+	private Text currentLayerText;
 	
-	private int frames;
+	//Save Menu
+	private SaveMenu saveMenu;
 	
-	private static final int NUM_LAYERS = 4;
+	//The current drawing mode
+	private DrawMode currentDrawMode;
 	
+	//Transition
+	private FadeToBlack fadeToBlack;
+	
+	//Default Values
+	private static final int DEFAULT_NUM_COLS = 150;
+	private static final int DEFAULT_NUM_ROWS = 90;
+	private static final int DEFAULT_TILE_SIZE = 16;
+
 	/**
 	 * Constructor
 	 */
 	public PlayState()
 	{
-		//Initialize managers
+		//Obtain managers
 		this.imageManager = ImageManager.instance();
 		this.saveManager = SaveManager.instance();
-		this.transitionManager = new TransitionManager(GamePanel.WIDTH, GamePanel.HEIGHT);
-		this.transitionManager.setTransition(TransitionType.FADE_TO_BLACK);
-		
-		//Initialize layers; "maps"
-		this.layers = new TileMap[NUM_LAYERS];
-		
-		//Check if there are files of TileMaps
-		if(saveManager.getLayer1() != null && saveManager.getLayer2() != null && 
-		   saveManager.getCollisionLayer() != null && saveManager.getItemLayer() != null)
-		{
-			//Obtain TileMaps from saveManager
-			layers[0] = saveManager.getLayer1();
-			layers[1] = saveManager.getLayer2();
-			layers[2] = saveManager.getCollisionLayer();
-			layers[3] = saveManager.getItemLayer();
-			
-			//Initialize layers (TileMaps)
-			for(int i = 0; i < NUM_LAYERS; i++)
-			{
-				layers[i].init();
-			}
-			
-			saveManager.setLayer1(null);
-			saveManager.setLayer2(null);
-			saveManager.setCollisionLayer(null);
-			saveManager.setItemLayer(null);
-		}
-		else
-		{		
-			//Create "blank" layers (TileMaps)
-			for(int i = 0; i < NUM_LAYERS; i++)
-			{
-				this.layers[i] = new TileMap(0, 0, 60, 51, 32);
-			}
-		}
-		
-		//Set currentLayer to layers[0]
-		this.currentLayer = layers[0];
-		
-		//Strings
-		this.layerTexts = new String[NUM_LAYERS];
-		this.layerTexts[0] = "Current Layer: Layer 1";
-		this.layerTexts[1] = "Current Layer: Layer 2";
-		this.layerTexts[2] = "Current Layer: Layer 3";
-		this.layerTexts[3] = "Current Layer: Item Layer";
-		this.currentLayerText = layerTexts[0];
-		
-		//Create a "background map"
-		this.backgroundMap = new TileMap(0, 0, 60, 51, 32);
-		
-		//Create camera
-		this.camera = new Camera(0, 0, 960, 480, backgroundMap);
-		
-		//Set camera to backgroundMap
-		this.backgroundMap.setCamera(camera);
-		this.backgroundMap.setImages(imageManager.getTileImages());
-		
-		//Set camera to the layers (TileMaps)
-		//Set images to layers (TileMaps)
-		for(int i = 0; i < 3; i++)
-		{
-			layers[i].setCamera(camera);
-			layers[i].setImages(imageManager.getTileImages());
-		}
-		
-		//layer[3] is a special layer (TileMap) meant for only items
-		layers[3].setCamera(camera);
-		layers[3].setImages(imageManager.getItemImages());
-		
-		//Initialize tilePalette
-		this.tilePalette = new Palette(0, 
-				  				  480, 
-				  				  GamePanel.WIDTH, 
-				  				  GamePanel.HEIGHT - 480,
-				  				  imageManager.getTileImages());
-		this.tilePalette.setRange(6, 19);
-		
-		//Initialize itemPalette
-		this.itemPalette = new Palette(0,
-								  480,
-								  GamePanel.WIDTH,
-								  GamePanel.HEIGHT - 480,
-								  imageManager.getItemImages());
-		this.itemPalette.setRange(1, 3);
-		
-		this.currentPalette = tilePalette;
-		
-		//Create MapUtility
-		this.mapUtility = new MapUtility(backgroundMap, camera);
 		
 		this.nextState = null;
 		
-		this.frames = 0;
-		
+		//Initialize and set various objects and variables
+		createMaps();
+		createCamera();		
+		setCameraToMaps();
+		createMapHelper();
+		createPalettes();
+		createVisionIcons();
 		createButtons();
+		createTexts();
+		createMenus();
+		createTransitions();
+		
+		this.currentDrawMode = DrawMode.ARROW;
 	}
 	
-	/**
-	 * Method that creates/initializes Button
-	 */
-	private void createButtons()
+////////////////////////////////////////////// CREATE METHODS //////////////////////////////////////////////
+	private void createMaps()
 	{
-		//Obtain button images
-		BufferedImage[] buttonImages = imageManager.getSmallButtonImages();
-		
-		//Water Button
-		waterButton = new Button(buttonImages[0], buttonImages[1]);
-		waterButton.setX(0);
-		waterButton.setY(tilePalette.getY());
-		
-		//Paths Button
-		pathsButton = new Button(buttonImages[2], buttonImages[3]);
-		pathsButton.setX(waterButton.getX() + waterButton.getWidth() + 1);
-		pathsButton.setY(tilePalette.getY());
-		
-		//Grass Button
-		grassButton = new Button(buttonImages[4], buttonImages[5]);
-		grassButton.setX(pathsButton.getX() + pathsButton.getWidth() + 1);
-		grassButton.setY(tilePalette.getY());
-		
-		//Plants Button
-		plantsButton = new Button(buttonImages[6], buttonImages[7]);
-		plantsButton.setX(grassButton.getX() + grassButton.getWidth() + 1);
-		plantsButton.setY(tilePalette.getY());
-		
-		//Others Button
-		otherButton = new Button(buttonImages[8], buttonImages[9]);
-		otherButton.setX(plantsButton.getX() + plantsButton.getWidth() + 1);
-		otherButton.setY(tilePalette.getY());
-		
-		//Items Button
-		itemsButton = new Button(buttonImages[10], buttonImages[11]);
-		itemsButton.setX(otherButton.getX() + otherButton.getWidth());
-		itemsButton.setY(tilePalette.getY());
-		
-		//Grid Button
-		gridButton = new Button(buttonImages[12], buttonImages[13]);
-		gridButton.setX(968);
-		gridButton.setY(96);
-		
-		//Save Button
-		saveButton = new Button(buttonImages[14], buttonImages[15]);
-		saveButton.setX(968);
-		saveButton.setY(gridButton.getY() + gridButton.getHeight() + 8);
-	
-		//Menu Button
-		menuButton = new Button(buttonImages[16], buttonImages[17]);
-		menuButton.setX(968);
-		menuButton.setY(saveButton.getY() + saveButton.getHeight() + 8);
-		
-		//Initialize visibleIcons
-		visibleIcons = new VisibleIcon[NUM_LAYERS];
-		
-		visibleIcons[0] = new VisibleIcon(buttonImages[26], buttonImages[27],
-				                          buttonImages[28], buttonImages[29],
-				                          1048, 256);
-		visibleIcons[1] = new VisibleIcon(buttonImages[26], buttonImages[27],
-                						  buttonImages[28], buttonImages[29],
-                						  1048, visibleIcons[0].getY() + visibleIcons[0].getHeight() + 2);
-		visibleIcons[2] = new VisibleIcon(buttonImages[26], buttonImages[27],
-				 						  buttonImages[28], buttonImages[29],
-				 						  1048, visibleIcons[1].getY() + visibleIcons[1].getHeight() + 2);
-		visibleIcons[3] = new VisibleIcon(buttonImages[26], buttonImages[27],
-				  						  buttonImages[28], buttonImages[29],
-				  						  1048, visibleIcons[2].getY() + visibleIcons[2].getHeight() + 2);
-		
-		//Initialize layerButtons
-		layerButtons = new Button[NUM_LAYERS];
-		
-		layerButtons[0] = new Button(buttonImages[18], buttonImages[19]);
-		layerButtons[0].setX(visibleIcons[0].getX() + visibleIcons[0].getWidth() + 2);
-		layerButtons[0].setY(256);
-		
-		layerButtons[1] = new Button(buttonImages[20], buttonImages[21]);
-		layerButtons[1].setX(visibleIcons[1].getX() + visibleIcons[1].getWidth() + 2);
-		layerButtons[1].setY(layerButtons[0].getY() + layerButtons[0].getHeight() + 2);
-		
-		layerButtons[2] = new Button(buttonImages[22], buttonImages[23]);
-		layerButtons[2].setX(visibleIcons[2].getX() + visibleIcons[2].getWidth() + 2);
-		layerButtons[2].setY(layerButtons[1].getY() + layerButtons[1].getHeight() + 2);
-		
-		layerButtons[3] = new Button(buttonImages[24], buttonImages[25]);
-		layerButtons[3].setX(visibleIcons[3].getX() + visibleIcons[3].getWidth() + 2);
-		layerButtons[3].setY(layerButtons[2].getY() + layerButtons[2].getHeight() + 2);
-	}
-	
-	/**
-	 * Method that updates maps
-	 */
-	private void updateMaps()
-	{
-		//Update layers
-		for(int i = 0; i < NUM_LAYERS; i++)
+		//Check if a save file exists
+		if(saveManager.getCurrentSaveFile() != null)
 		{
-			layers[i].update();
-		}
-		
-		//If the currentPalette is the tilePalette and the currentLayer is not layers[3]
-		if(currentPalette.equals(tilePalette) && currentLayer != layers[3])
-		{
-			//Check if a Tile within the layer (TileMap) has been clicked
-			if(mapUtility.isClicked())
-			{
-				//Change a Tile within the layer (TileMap)
-				currentLayer.changeTile(mapUtility.getChangeCol(),
-										mapUtility.getChangeRow(),
-										tilePalette.getCurrentImage());
-				
-				mapUtility.setClicked(false);
-				mapUtility.setChangeCol(-1);
-				mapUtility.setChangeRow(-1);
-			}
-		}
-		else if(currentPalette.equals(itemPalette) && currentLayer == layers[3])
-		{
-			//Check if a Tile within the layer (TileMap) has been clicked
-			if(mapUtility.isClicked())
-			{
-				//Change a Tile within the layer (TileMap)
-				currentLayer.changeTile(mapUtility.getChangeCol(),
-										mapUtility.getChangeRow(),
-										itemPalette.getCurrentImage());
-				mapUtility.setClicked(false);
-				mapUtility.setChangeCol(-1);
-				mapUtility.setChangeRow(-1);
-			}
+			//Load maps from save file
+			this.tileMap = saveManager.getCurrentSaveFile().getTileMap();
+			this.objectMap = saveManager.getCurrentSaveFile().getObjectMap();
+			this.itemMap = saveManager.getCurrentSaveFile().getItemMap();
+			this.hitboxMap = saveManager.getCurrentSaveFile().getHitboxMap();
 		}
 		else
 		{
-			mapUtility.setClicked(false);
-			mapUtility.setChangeCol(-1);
-			mapUtility.setChangeRow(-1);
+			//Create default, "empty" maps
+			this.tileMap = new TileMap(0, 0, DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS, DEFAULT_TILE_SIZE);
+			this.objectMap = new ObjectMap();
+			this.itemMap = new TileMap(0, 0, DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS, DEFAULT_TILE_SIZE);
+			this.hitboxMap = new TileMap(0, 0, DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS, DEFAULT_TILE_SIZE);
 		}
 		
+		this.backgroundMap = new TileMap(0, 0, tileMap.getNumCols(), tileMap.getNumRows(), tileMap.getTileSize());
+		
+		//Set images to maps
+		this.tileMap.setImages(imageManager.getTileImages());
+		this.itemMap.setImages(imageManager.getItemImages());
+		this.hitboxMap.setImages(imageManager.getHitboxImages());
+		
+		this.objectMap.setTreeImages(imageManager.getTreeImages());
+		this.objectMap.setBushImages(imageManager.getBushImages());
+		this.objectMap.setRockImages(imageManager.getRockImages());
+		this.objectMap.setStructureImages(imageManager.getStructureImages());
+		this.objectMap.setBuildingImages(imageManager.getBuildingImages());
+		this.objectMap.setMiscImages(imageManager.getMiscImages());
+	}	
+	
+	private void createCamera()
+	{
+		this.camera = new Camera(0, 0, 480, 240, backgroundMap);
+	}
+	
+	private void setCameraToMaps()
+	{
+		//Set camera to maps
+		this.backgroundMap.setCamera(camera);
+		this.tileMap.setCamera(camera);
+		this.objectMap.setCamera(camera);
+		this.itemMap.setCamera(camera);
+		this.hitboxMap.setCamera(camera);
+		
+		//Update maps so that they are aligned to
+		//where the camera is looking
+		this.backgroundMap.update();
+		this.tileMap.update();
+		this.objectMap.init();
+		this.objectMap.update();
+		this.itemMap.update();
+		this.hitboxMap.update();
+	}
+	
+	private void createMapHelper()
+	{
+		this.mapHelper = new MapHelper(backgroundMap, camera);
+	}
+	
+	private void createPalettes()
+	{
+		this.tilePalette = new TilePalette(
+				0,
+				camera.getHeight(),
+				GamePanel.WIDTH, GamePanel.HEIGHT - 160,
+				imageManager.getTileImages()
+		);
+		this.tilePalette.setRange(1, 14);
+		
+		this.objectPalette = new ObjectPalette(
+				0,
+				camera.getHeight(),
+				GamePanel.WIDTH,
+				GamePanel.HEIGHT - 160,
+				imageManager.getTreeImages(),
+				imageManager.getBushImages(),
+				imageManager.getRockImages(),
+				imageManager.getStructureImages(),
+				imageManager.getBuildingImages(),
+				imageManager.getMiscImages()
+		);
+		
+		this.itemPalette = new TilePalette(
+				0,
+				camera.getHeight(),
+				GamePanel.WIDTH,
+				GamePanel.HEIGHT - 160,
+				imageManager.getItemImages()
+		);
+		this.itemPalette.setRange(1, 28);
+		
+		this.hitboxPalette = new TilePalette(
+				0,
+				camera.getHeight(),
+				GamePanel.WIDTH, GamePanel.HEIGHT - 160,
+				imageManager.getHitboxImages()
+		);
+		this.hitboxPalette.setRange(1, 1);
+		
+		this.currentPalette = tilePalette;
+	}
+
+	private void createVisionIcons()
+	{
+		BufferedImage[] buttonImages = imageManager.getButtonImages();
+		
+		visionIcons = new VisionIcon[4];
+		for(int i = 0; i < visionIcons.length; i++)
+		{
+			if(i == 0)
+			{
+				visionIcons[i] = new VisionIcon(camera.getWidth() + 4,
+												32, 
+												buttonImages[4],
+												buttonImages[5], 
+												buttonImages[6]);
+			}
+			else
+			{
+				visionIcons[i] = new VisionIcon(camera.getWidth() + 4,
+												visionIcons[i-1].getY() + visionIcons[i-1].getHeight() + 2, 
+												buttonImages[4],
+												buttonImages[5], 
+												buttonImages[6]);
+			}
+
+			visionIcons[i].setVisible(true);
+			visionIcons[i].setDisabled(false);
+		}
+	}
+	
+	private void createButtons()
+	{
+		BufferedImage[] buttonImages = imageManager.getButtonImages();
+		
+		this.tileLayerButton = new ImageButton(
+				visionIcons[0].getX() + visionIcons[0].getWidth() + 2,
+				32,
+				buttonImages[0].getWidth(),
+				buttonImages[0].getHeight(),
+				buttonImages[0],
+				buttonImages[1],
+				"TILE LAYER"
+		);
+				
+		this.objectLayerButton = new ImageButton(
+				visionIcons[1].getX() + visionIcons[1].getWidth() + 2,
+				tileLayerButton.getY() + tileLayerButton.getHeight() + 2,
+				buttonImages[0].getWidth(),
+				buttonImages[0].getHeight(),
+				buttonImages[0],
+				buttonImages[1],
+				"OBJECT LAYER"
+		);
+		
+		this.itemLayerButton = new ImageButton(
+				visionIcons[2].getX() + visionIcons[2].getWidth() + 2,
+				objectLayerButton.getY() + objectLayerButton.getHeight() + 2,
+				buttonImages[0].getWidth(),
+				buttonImages[0].getHeight(),
+				buttonImages[0],
+				buttonImages[1],
+				"ITEM LAYER"
+		);
+				
+		this.hitboxLayerButton = new ImageButton(
+				visionIcons[3].getX() + visionIcons[3].getWidth() + 2,
+				itemLayerButton.getY() + itemLayerButton.getHeight() + 2,
+				buttonImages[0].getWidth(),
+				buttonImages[0].getHeight(),
+				buttonImages[0],
+				buttonImages[1],
+				"HITBOX LAYER"
+		);
+		
+		this.gridButton = new ImageButton(
+				camera.getWidth() + 4,
+				tilePalette.getY() - buttonImages[2].getHeight() * 4,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"GRID"
+		);
+		
+		this.saveButton = new ImageButton(
+				camera.getWidth() + 4,
+				gridButton.getY() + gridButton.getHeight() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"SAVE"
+		);
+		
+		this.mainButton = new ImageButton(
+				camera.getWidth() + 4,
+				saveButton.getY() + saveButton.getHeight() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"MAIN"
+				);
+		
+		this.arrowIcon = new CustomIcon(buttonImages[7], buttonImages[8], buttonImages[9]);
+		this.arrowIcon.setX(GamePanel.WIDTH - 64);
+		this.arrowIcon.setY(gridButton.getY());
+		
+		this.fillIcon = new CustomIcon(buttonImages[7], buttonImages[8], buttonImages[10]);
+		this.fillIcon.setX(arrowIcon.getX() + arrowIcon.getWidth() + 2);
+		this.fillIcon.setY(arrowIcon.getY());
+		
+		this.grassButton = new ImageButton(
+				2,
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"GRASS"
+		);
+		
+		this.pathButton = new ImageButton(
+				grassButton.getX() + grassButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"PATH"
+		);
+		
+		this.wallButton = new ImageButton(
+				pathButton.getX() + pathButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"WALL"
+		);
+		
+		this.waterButton = new ImageButton(
+				wallButton.getX() + wallButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"WATER"
+		);
+		
+		this.allButton = new ImageButton(
+				waterButton.getX() + waterButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"ALL"
+		);
+		
+		this.treeButton = new ImageButton(
+				2,
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"TREE"
+		);
+		
+		this.bushButton = new ImageButton(
+				treeButton.getX() + treeButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"BUSH"
+		);
+		
+		this.rockButton = new ImageButton(
+				bushButton.getX() + bushButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"ROCK"
+		);
+		
+		this.structureButton = new ImageButton(
+				rockButton.getX() + rockButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"STRUCTURE"
+		);
+		
+		this.buildingButton = new ImageButton(
+				structureButton.getX() + structureButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"BUILDING"
+		);
+		
+		this.miscButton = new ImageButton(
+				buildingButton.getX() + buildingButton.getWidth(),
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"MISC"
+		);
+		
+		this.itemButton = new ImageButton(
+				2,
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"ITEM"
+		);
+		
+		this.hitboxButton = new ImageButton(
+				2,
+				tilePalette.getY() + 2,
+				buttonImages[2].getWidth(),
+				buttonImages[2].getHeight(),
+				buttonImages[2],
+				buttonImages[3],
+				"HITBOX"
+		);
+	}
+	
+	private void createTexts()
+	{
+		this.currentLayerText = new Text("CURRENT LAYER: TILE LAYER");
+		this.currentLayerText.setX(camera.getWidth() + 4);
+		this.currentLayerText.setY(hitboxLayerButton.getY() + hitboxLayerButton.getHeight() + 16);
+
+		this.currentLocationText = new Text("[" + mapHelper.getCurrentRow() + " " + mapHelper.getCurrentCol() + "]");
+		this.currentLocationText.setX(camera.getWidth() + 4);
+		this.currentLocationText.setY(currentLayerText.getY() + currentLayerText.getHeight() + 8);
+	}
+	
+	private void createMenus()
+	{
+		this.saveMenu = new SaveMenu(
+				16,
+				16,
+				GamePanel.WIDTH - 32,
+				GamePanel.HEIGHT - 32,
+				tileMap,
+				objectMap,
+				itemMap,
+				hitboxMap
+			);
+	}
+	
+	private void createTransitions()
+	{
+		this.fadeToBlack = new FadeToBlack(GamePanel.WIDTH, GamePanel.HEIGHT);
+	}
+	
+////////////////////////////////////////////// UPDATE METHODS //////////////////////////////////////////////
+	
+	/**
+	 * Method that updates the maps
+	 */
+	private void updateMaps()
+	{
 		backgroundMap.update();
+		tileMap.update();
+		objectMap.update();
+		itemMap.update();
+		hitboxMap.update();
 	}
 	
 	/**
-	 * Method that updates Buttons
+	 * Method that updates mapHelper
+	 */
+	private void updateMapHelper()
+	{
+		mapHelper.update();
+		
+		//If mapHelper has been clicked on;
+		//The map area has been clicked on
+		if(mapHelper.isClicked())
+		{
+			mapHelper.setClicked(false);
+			
+			if(currentPalette == tilePalette)
+			{
+				//Change a tile on the tileMap (Add a tile to the tileMap)
+				switch(currentDrawMode)
+				{
+					case ARROW:
+						tileMap.changeTile(
+								mapHelper.getChangeCol(),
+								mapHelper.getChangeRow(),
+								tilePalette.getCurrentImage()
+						);
+						break;
+					case FILL:
+						tileMap.fillTiles(
+								mapHelper.getChangeCol(),
+								mapHelper.getChangeRow(),
+								tilePalette.getCurrentImage()
+						);
+						break;
+					default:
+						break;
+				}
+	
+				mapHelper.setChangeCol(-1);
+				mapHelper.setChangeCol(-1);
+			}
+			else if(currentPalette == objectPalette)
+			{
+				//Add a GameObject to the objectMap
+				GameObject temp = objectPalette.getCurrentGameObject(objectPalette.getCurrentGameObjectIndex());
+				int x = mapHelper.getChangeCol() * backgroundMap.getTileSize();
+				int y = mapHelper.getChangeRow() * backgroundMap.getTileSize();
+				objectMap.addGameObject(
+						temp.getId(),
+						x,
+						y,
+						temp.getWidth(),
+						temp.getHeight(),
+						temp.getGameObjectType()
+				);
+				
+				mapHelper.setChangeCol(-1);
+				mapHelper.setChangeCol(-1);
+			}
+			else if(currentPalette == itemPalette)
+			{
+				//Change a tile on the itemMap (Add an item to the itemMap)
+				itemMap.changeTile(
+						mapHelper.getChangeCol(),
+						mapHelper.getChangeRow(),
+						itemPalette.getCurrentImage()
+				);
+		
+				mapHelper.setChangeCol(-1);
+				mapHelper.setChangeCol(-1);
+			}
+			else if(currentPalette == hitboxPalette)
+			{
+				//Change a tile on the hitboxMap (Add or remove a hitbox tile to hitboxMap)
+				switch(currentDrawMode)
+				{
+					case ARROW:
+						hitboxMap.changeTile(
+								mapHelper.getChangeCol(),
+								mapHelper.getChangeRow(),
+								hitboxPalette.getCurrentImage()
+						);
+						break;
+					case FILL:
+						hitboxMap.fillTiles(
+								mapHelper.getChangeCol(),
+								mapHelper.getChangeRow(),
+								hitboxPalette.getCurrentImage()
+						);
+						break;
+					default:
+						break;
+				}
+		
+				mapHelper.setChangeCol(-1);
+				mapHelper.setChangeCol(-1);
+			}
+		}
+		
+		//Obtain the row and column on the map that the mouse is currently at
+		//Store it as a Text object, so that it can be displayed on screen
+		currentLocationText.setText("[" + mapHelper.getCurrentRow() + " " + mapHelper.getCurrentCol() + "]");
+	}
+	
+	/**
+	 * Method that updates the camera
+	 */
+	private void updateCamera()
+	{
+		camera.update();
+	}
+	
+	/**
+	 * Method that updates the currentPalette
+	 */
+	private void updateCurrentPalette()
+	{
+		currentPalette.update();
+	}
+	
+	/**
+	 * Method that updates the visionIcons
+	 */
+	private void updateVisionIcons()
+	{
+		for(int i = 0; i < visionIcons.length; i++)
+		{
+			visionIcons[i].update();
+			
+			if(visionIcons[i].isMouseClickingButton())
+			{
+				visionIcons[i].setMouseClickingButton(false);
+				visionIcons[i].setVision(!(visionIcons[i].hasVision()));
+			}
+		}
+	}
+	
+	/**
+	 * Method that updates the Buttons
 	 */
 	private void updateButtons()
 	{
-		waterButton.update();
-		pathsButton.update();
-		grassButton.update();
-		plantsButton.update();
-		otherButton.update();
-		itemsButton.update();
+		tileLayerButton.update();
+		objectLayerButton.update();
+		itemLayerButton.update();
+		hitboxLayerButton.update();
+		
 		gridButton.update();
 		saveButton.update();
-		menuButton.update();
+		mainButton.update();
 		
-		for(int i = 0; i < NUM_LAYERS; i++)
+		//Update certain Buttons depending on
+		//which Palette is the currentPalette
+		if(currentPalette == tilePalette)
 		{
-			visibleIcons[i].update();
+			arrowIcon.update();
+			fillIcon.update();
+			
+			grassButton.update();
+			pathButton.update();
+			wallButton.update();
+			waterButton.update();
+			allButton.update();
 		}
-		
-		for(int i = 0; i < NUM_LAYERS; i++)
+		else if(currentPalette == objectPalette)
 		{
-			layerButtons[i].update();
+			treeButton.update();
+			bushButton.update();
+			rockButton.update();
+			structureButton.update();
+			buildingButton.update();
+			miscButton.update();
 		}
+		else if(currentPalette == itemPalette)
+		{
+			itemButton.update();
+		}
+		else if(currentPalette == hitboxPalette)
+		{
+			arrowIcon.update();
+			fillIcon.update();
+			
+			hitboxButton.update();
+		}
+
+		//Perform an action if a Button has been clicked on
+		performButtonAction();
 	}
 	
 	/**
-	 * Method that performs an action when a Button
-	 * has been clicked on
+	 * Method that performs an action if a Button has been clicked on
 	 */
-	private void buttonActions()
+	private void performButtonAction()
 	{
-		if(waterButton.isMouseClickingButton()) //waterButton has been clicked
+		if(tileLayerButton.isMouseClickingButton())
 		{
-			waterButton.setMouseClickingButton(false);
+			tileLayerButton.setMouseClickingButton(false);
 			
-			if(currentPalette.equals(tilePalette) == false)
+			//Change the currentPalette to the tilePalette
+			if(currentPalette != tilePalette)
 			{
 				currentPalette = tilePalette;
+				currentLayerText.setText("CURRENT LAYER: TILE LAYER");
 			}
 			
-			currentPalette.setRange(6, 19);
 		}
-		else if(pathsButton.isMouseClickingButton()) //pathsButton has been clicked
+		else if(objectLayerButton.isMouseClickingButton())
 		{
-			pathsButton.setMouseClickingButton(false);
+			objectLayerButton.setMouseClickingButton(false);
 			
-			if(currentPalette.equals(tilePalette) == false)
+			//Change the currentPalette to the objectPalette
+			if(currentPalette != objectPalette)
 			{
-				currentPalette = tilePalette;
+				currentPalette = objectPalette;
+				currentLayerText.setText("CURRENT LAYER: OBJECT LAYER");
+				
+				currentDrawMode = DrawMode.ARROW;
+				mapHelper.setCurrentDrawMode(currentDrawMode);
 			}
-			
-			currentPalette.setRange(20, 32);
 		}
-		else if(grassButton.isMouseClickingButton()) //grassButton has been clicked
+		else if(itemLayerButton.isMouseClickingButton())
 		{
-			grassButton.setMouseClickingButton(false);
+			itemLayerButton.setMouseClickingButton(false);
 			
-			if(currentPalette.equals(tilePalette) == false)
-			{
-				currentPalette = tilePalette;
-			}
-			
-			currentPalette.setRange(33, 38);
-		}
-		else if(plantsButton.isMouseClickingButton()) //plantsButton has been clicked
-		{
-			plantsButton.setMouseClickingButton(false);
-			
-			if(currentPalette.equals(tilePalette) == false)
-			{
-				currentPalette = tilePalette;
-			}
-			
-			currentPalette.setRange(39, 41);
-			
-		}
-		else if(otherButton.isMouseClickingButton()) //othersButton has been clicked
-		{
-			otherButton.setMouseClickingButton(false);
-			
-			if(currentPalette.equals(tilePalette) == false)
-			{
-				currentPalette = tilePalette;
-			}
-			
-			currentPalette.setRange(1, 5);
-		}
-		else if(itemsButton.isMouseClickingButton()) //itemsButton has been clicked
-		{
-			itemsButton.setMouseClickingButton(false);
-			
-			if(currentPalette.equals(itemPalette) == false)
+			//Change the currentPalette to the itemPalette
+			if(currentPalette != itemPalette)
 			{
 				currentPalette = itemPalette;
-			}
+				currentLayerText.setText("CURRENT LAYER: ITEM LAYER");
 			
-			currentPalette.setRange(1, 3);
+				currentDrawMode = DrawMode.ARROW;
+				mapHelper.setCurrentDrawMode(currentDrawMode);
+			}
 		}
-		else if(gridButton.isMouseClickingButton()) //gridButton has been clicked
+		else if(hitboxLayerButton.isMouseClickingButton())
+		{
+			hitboxLayerButton.setMouseClickingButton(false);
+			
+			//Change the currentPalette to the hitboxPalette
+			if(currentPalette != hitboxPalette)
+			{
+				currentPalette = hitboxPalette;
+				currentLayerText.setText("CURRENT LAYER: HITBOX LAYER");
+			}
+		}
+		else if(gridButton.isMouseClickingButton())
 		{
 			gridButton.setMouseClickingButton(false);
 			
-			mapUtility.setGrid((!mapUtility.isGrid()));
+			//Turn the grid layout on or off
+			mapHelper.setGrid(!(mapHelper.isGrid()));
 		}
 		else if(saveButton.isMouseClickingButton())
 		{
 			saveButton.setMouseClickingButton(false);
 			
-			//Attempt to save layers (Tilemaps) to files
-			saveManager.save(layers[0], layers[1], layers[2], layers[3]);
+			//Bring up the saveMenu
+			saveMenu.setVisible(true);
 		}
-		else if(menuButton.isMouseClickingButton()) //menuButton has been clicked
+		else if(mainButton.isMouseClickingButton())
 		{
-			menuButton.setMouseClickingButton(false);
+			mainButton.setMouseClickingButton(false);
 			
-			//Indicate the next State to go to; MenuState
-			nextState = StateType.MENU_STATE;
+			//Run the fadeToBlack transition
+			fadeToBlack.setRunning(true);
 			
-			//Start transition
-			transitionManager.startTransition();
+			//Indicate that the next state to go to is the MainState
+			nextState = StateType.MAIN;
 		}
-		
-		//Check if a layer button has been clicked
-		for(int i = 0; i < 4; i++)
+		else if(arrowIcon.isMouseClickingButton())
 		{
-			if(layerButtons[i].isMouseClickingButton())
-			{
-				layerButtons[i].setMouseClickingButton(false);
-				
-				//Change the current layer to the indicated layer
-				currentLayer = layers[i];
-				currentLayerText = layerTexts[i];
-				break;
-			}
+			arrowIcon.setMouseClickingButton(false);
+			currentDrawMode = DrawMode.ARROW;
+			mapHelper.setCurrentDrawMode(currentDrawMode);
+		}
+		else if(fillIcon.isMouseClickingButton())
+		{
+			fillIcon.setMouseClickingButton(false);
+			currentDrawMode = DrawMode.FILL;
+			mapHelper.setCurrentDrawMode(currentDrawMode);
+			
+		}
+		else if(grassButton.isMouseClickingButton())
+		{
+			grassButton.setMouseClickingButton(false);
+			
+			//Tell tilePalette to display the grass tiles
+			tilePalette.setRange(1, 14);
+		}
+		else if(pathButton.isMouseClickingButton())
+		{
+			pathButton.setMouseClickingButton(false);
+			
+			//Tell tilePalette to display the path tiles
+			tilePalette.setRange(15, 28);
+		}
+		else if(wallButton.isMouseClickingButton())
+		{
+			wallButton.setMouseClickingButton(false);
+			
+			//Tell tilePalette to display the wall tiles
+			tilePalette.setRange(43, 58);
+		}
+		else if(waterButton.isMouseClickingButton())
+		{
+			waterButton.setMouseClickingButton(false);
+			
+			//Tell tilePalette to display the water tiles
+			tilePalette.setRange(29, 42);
+		}
+		else if(allButton.isMouseClickingButton())
+		{
+			allButton.setMouseClickingButton(false);
+			
+			//Tell tilePalette to display all of the tiles
+			tilePalette.setRange(1, 58);
+		}
+		else if(treeButton.isMouseClickingButton())
+		{
+			treeButton.setMouseClickingButton(false);
+			
+			//Tell the objectPalette to display the tree objects
+			objectPalette.setCurrentImages(objectPalette.getTreeImages());
+			objectPalette.setCurrentGameObjects(objectPalette.getTrees());
+			objectPalette.setCurrentGameObjectIndex(0);
+		}
+		else if(bushButton.isMouseClickingButton())
+		{
+			bushButton.setMouseClickingButton(false);
+			
+			//Tell the objectPalette to display the bush objects
+			objectPalette.setCurrentImages(objectPalette.getBushImages());
+			objectPalette.setCurrentGameObjects(objectPalette.getBushes());
+			objectPalette.setCurrentGameObjectIndex(0);
+		}
+		else if(rockButton.isMouseClickingButton())
+		{
+			rockButton.setMouseClickingButton(false);
+			
+			//Tell the objectPalette to display the rock objects
+			objectPalette.setCurrentImages(objectPalette.getRockImages());
+			objectPalette.setCurrentGameObjects(objectPalette.getRocks());
+			objectPalette.setCurrentGameObjectIndex(0);
+		}
+		else if(structureButton.isMouseClickingButton())
+		{
+			structureButton.setMouseClickingButton(false);
+			
+			//Tell the objectPalette to display the structure objects
+			objectPalette.setCurrentImages(objectPalette.getStructureImages());
+			objectPalette.setCurrentGameObjects(objectPalette.getStructures());
+			objectPalette.setCurrentGameObjectIndex(0);
+		}
+		else if(buildingButton.isMouseClickingButton())
+		{
+			buildingButton.setMouseClickingButton(false);
+			
+			//Tell the objectPalette to display the building objects
+			objectPalette.setCurrentImages(objectPalette.getBuildingImages());
+			objectPalette.setCurrentGameObjects(objectPalette.getBuildings());
+			objectPalette.setCurrentGameObjectIndex(0);
+		}
+		else if(miscButton.isMouseClickingButton())
+		{
+			miscButton.setMouseClickingButton(false);
+			
+			//Tell the objectPalette to display the misc objects
+			objectPalette.setCurrentImages(objectPalette.getMiscImages());
+			objectPalette.setCurrentGameObjects(objectPalette.getMiscs());
+			objectPalette.setCurrentGameObjectIndex(0);
+		}
+		else if(itemButton.isMouseClickingButton())
+		{
+			itemButton.setMouseClickingButton(false);
+			
+			//Tell the itemPalette to display the items
+			itemPalette.setRange(1, 28);
+		}
+		else if(hitboxButton.isMouseClickingButton())
+		{
+			hitboxButton.setMouseClickingButton(false);
+			
+			//Tell the hitbox Palette to display the hitbox tiles
+			hitboxPalette.setRange(1, 1);
+		}
+	}
+	
+	/**
+	 * Method that updates the menus
+	 */
+	private void updateMenus()
+	{
+		saveMenu.update();
+	}
+	
+	/**
+	 * Method that updates the Transitions
+	 */
+	private void updateTransitions()
+	{
+		fadeToBlack.update();
+	}
+	
+	/**
+	 * Method that checks if a change of state is necessary
+	 */
+	private void changeState()
+	{
+		//If fadeToBlack transition is done and
+		//a next state has been decided..
+		if(fadeToBlack.isDone() && nextState != null)
+		{
+			MouseManager.instance().clearCurrentPoint();
+			MouseManager.instance().clearReleasedPoint();
+			
+			//Go to the next state
+			StateManager.instance().nextState(nextState);
 		}
 	}
 	
@@ -465,164 +942,253 @@ public class PlayState extends State
 	 */
 	public void update()
 	{
-		if(transitionManager.isDone())
+		updateTransitions();
+		if(fadeToBlack.isRunning())
 		{
-			StateManager.instance().nextState(nextState);
+			return;
+		}
+		changeState();
+		
+		updateMenus();
+		
+		if(saveMenu.isVisible())
+		{
 			return;
 		}
 		
-		if(transitionManager.isRunning())
-		{
-			transitionManager.update();
-			return;
-		}
-		
-		//Update maps
 		updateMaps();
-		
-		mapUtility.update();
-		
-		//Update Camera
-		camera.update();
-		
-		//Update currentPalette
-		currentPalette.update();
-		
-		//Update Buttons
+		updateMapHelper();
+		updateCamera();
+		updateCurrentPalette();
+		updateVisionIcons();
 		updateButtons();
-		
-		//Perform Button action if necessary
-		buttonActions();
 	}
 	
+
+////////////////////////////////////////////// DRAW METHODS //////////////////////////////////////////////	
+	
 	/**
-	 * Method that draws the background of the PlayState
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * Method that draws the background
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
 	private void drawBackground(Graphics2D g)
 	{
-		backgroundMap.draw(g);
-		
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
 	}
 	
 	/**
-	 * Method that draws the TileMaps
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * Method that draws the maps
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
-	private void drawTileMaps(Graphics2D g)
+	private void drawMaps(Graphics2D g)
 	{
-		for(int i = 0; i < NUM_LAYERS; i++)
+		backgroundMap.draw(g);
+		
+		//Draw each map depending on if the visibility
+		//of a map has been turned on or off
+		if(visionIcons[0].hasVision())
 		{
-			if(visibleIcons[i].isEyeOn())
-			{
-				layers[i].draw(g);
-			}
+			tileMap.draw(g);
+		}
+		
+		if(visionIcons[1].hasVision())
+		{
+			objectMap.draw(g);
+		}
+		
+		if(visionIcons[2].hasVision())
+		{
+			itemMap.draw(g);
+		}
+		
+		if(visionIcons[3].hasVision())
+		{
+			hitboxMap.draw(g);
+		}
+	}
+	
+	/**
+	 * Method that draws a side bar
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawSideBar(Graphics2D g)
+	{
+		g.setColor(new Color(228, 207, 184));
+		g.fillRect(
+				camera.getWidth(),
+				0, GamePanel.WIDTH - camera.getWidth(), 
+				camera.getHeight()
+		);
+		
+		g.setColor(new Color(132, 68, 40));
+		g.drawRect(
+				camera.getWidth(),
+				0,
+				GamePanel.WIDTH - camera.getWidth() - 1, 
+				camera.getHeight()
+		);
+	}
+	
+	/**
+	 * Method that draws the mapHelper
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawMapHelper(Graphics2D g)
+	{
+		mapHelper.draw(g);
+	}
+	
+	/**
+	 * Method that draws the currentPalette
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawCurrentPalette(Graphics2D g)
+	{
+		currentPalette.draw(g);
+	}
+	
+	/**
+	 * Method that draws the VisionIcons
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawVisionIcons(Graphics2D g)
+	{
+		for(int i = 0; i < visionIcons.length; i++)
+		{
+			visionIcons[i].draw(g);
 		}
 	}
 	
 	/**
 	 * Method that draws the Buttons
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
 	private void drawButtons(Graphics2D g)
 	{
-		waterButton.draw(g);
-		pathsButton.draw(g);
-		grassButton.draw(g);
-		plantsButton.draw(g);
-		otherButton.draw(g);
-		itemsButton.draw(g);
+		tileLayerButton.draw(g);
+		objectLayerButton.draw(g);
+		itemLayerButton.draw(g);
+		hitboxLayerButton.draw(g);
+		
 		gridButton.draw(g);
 		saveButton.draw(g);
-		menuButton.draw(g);
+		mainButton.draw(g);
 		
-		for(int i = 0; i < NUM_LAYERS; i++)
+		//Draw certain Buttons depending on
+		//which Palette is the current Palette
+		if(currentPalette == tilePalette)
 		{
-			visibleIcons[i].draw(g);
+			arrowIcon.draw(g);
+			fillIcon.draw(g);
+			
+			grassButton.draw(g);
+			pathButton.draw(g);
+			wallButton.draw(g);
+			waterButton.draw(g);
+			allButton.draw(g);
 		}
-		
-		for(int i = 0; i < NUM_LAYERS; i++)
+		else if(currentPalette == objectPalette)
 		{
-			layerButtons[i].draw(g);
+			treeButton.draw(g);
+			bushButton.draw(g);
+			rockButton.draw(g);
+			structureButton.draw(g);
+			buildingButton.draw(g);
+			miscButton.draw(g);
+		}
+		else if(currentPalette == itemPalette)
+		{
+			itemButton.draw(g);
+		}
+		else if(currentPalette == hitboxPalette)
+		{
+			arrowIcon.draw(g);
+			fillIcon.draw(g);
+			
+			hitboxButton.draw(g);
 		}
 	}
 	
-	/**
-	 * Method that draws Strings
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
-	 */
-	private void drawStrings(Graphics2D g)
+	private void highlightCurrentMode(Graphics2D g)
 	{
-		if(saveManager.isSaved())
+		if(currentPalette == objectPalette || currentPalette == itemPalette)
 		{
-			g.setColor(Color.RED);
-			g.setFont(new Font("Courier New", Font.BOLD, 24));
-			int textWidth = TextSize.getTextWidth("SAVE COMPLETED", g);
-			g.drawString("SAVE COMPLETED", ((GamePanel.WIDTH + 960) / 2) - (textWidth / 2), 64);
-			++frames;
+			return;
 		}
 		
-		if(frames >= 90)
-		{
-			saveManager.setSaved(false);
-			frames = 0;
-		}
+		g.setColor(Color.RED);
 		
-		//CurrentLayer text
-		g.setColor(Color.WHITE);
-		g.setFont(new Font("Courier New", Font.BOLD, 18));
-		int textWidth = TextSize.getTextWidth(currentLayerText, g);
-		g.drawString(currentLayerText, ((GamePanel.WIDTH + 960) / 2) - (textWidth / 2), 448);
+		switch(currentDrawMode)
+		{
+			case ARROW:
+				g.drawRect(
+						arrowIcon.getX(),
+						arrowIcon.getY(),
+						arrowIcon.getWidth() - 1,
+						arrowIcon.getHeight() - 1
+				);
+				break;
+			case FILL:
+				g.drawRect(
+						fillIcon.getX(),
+						fillIcon.getY(),
+						fillIcon.getWidth() - 1,
+						fillIcon.getHeight() - 1
+				);
+				break;
+			default:
+				break;
+		}
 	}
 	
 	/**
-	 * Method that draws the transition
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * Method that draws the Texts
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
-	private void drawTransition(Graphics2D g)
+	private void drawTexts(Graphics2D g)
 	{
-		if(transitionManager.isRunning())
+		currentLocationText.draw(g);
+		currentLayerText.draw(g);
+	}
+	
+	/**
+	 * Method that draws the Menus
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawMenus(Graphics2D g)
+	{
+		if(saveMenu.isVisible())
 		{
-			transitionManager.draw(g);
+			saveMenu.draw(g);
 		}
 	}
 	
 	/**
-	 * Method that draws everything in MenuState
-	 * @param g (Graphics2D) The Graphics2D object to be drawn on
+	 * Method that draws the Transitions
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
+	 */
+	private void drawTransitions(Graphics2D g)
+	{
+		fadeToBlack.draw(g);
+	}
+	
+	/**
+	 * Method that draws the PlayState
+	 * @param g (Graphics2D g) The Graphics2D object to be drawn on
 	 */
 	public void draw(Graphics2D g)
 	{
-		//Draw background
 		drawBackground(g);
-		
-		//Draw tileMap
-		drawTileMaps(g);
-		
-		//Draw mapUtility
-		mapUtility.draw(g);
-		
-		g.setColor(Color.BLACK);
-		g.fillRect(960, 0, GamePanel.WIDTH - 960, 480);
-		
-		//Draw Palette
-		currentPalette.draw(g);
-		
-		//Draw Buttons
+		drawMaps(g);
+		drawMapHelper(g);
+		drawSideBar(g);
+		drawCurrentPalette(g);
+		drawVisionIcons(g);
 		drawButtons(g);
-		
-		//Draw Strings
-		drawStrings(g);
-		
-		if(transitionManager.isDone())
-		{
-			g.setColor(Color.BLACK);
-			g.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
-		}
-		
-		//Draw Transition
-		drawTransition(g);
+		highlightCurrentMode(g);
+		drawTexts(g);
+		drawMenus(g);
+		drawTransitions(g);
 	}
 }

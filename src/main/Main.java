@@ -6,25 +6,24 @@ import javax.swing.JFrame;
  * Main is the class that you run/execute in order to start the program
  *  
  * @author Vachia Thoj
- *
  */
 public class Main 
 {
-	public static void main(String args[])
+	public static void main(String[] args)
 	{
-		//Create window
+		//Create Window
 		JFrame window = new JFrame("Tile Map Maker");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		//Create GamePanel object
+		//Create GamePanel
 		GamePanel gamePanel = new GamePanel();
 		
-		//Store gamePanel in content pane
+		//Store gamePanel to content pane
 		window.setContentPane(gamePanel);
 		
 		window.pack();
 		
-		//Do not allow window to be resizable
+		//Do not window to be resizeable
 		window.setResizable(false);
 		
 		//Center window to computer screen

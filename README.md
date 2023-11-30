@@ -9,20 +9,26 @@ Author: Vachia Thoj
 - A custom Tile Map Maker
 - GUI built using the Swing and AWT libraries in Java
 - Keyboard controls: Arrow keys, Shift
+- Utilizes mouse for clicking
 
 #### resources folder
 - Contains images and save files
-- Needed in order to run program
 
 #### src folder
 - Contains the source code
 
 #### Source code is divided into the following packages:
+- button
+- date
 - entity
+- graph
 - helper
 - main
 - manager
 - map
+- menu
+- palette
+- save
 - state
 - transition
 

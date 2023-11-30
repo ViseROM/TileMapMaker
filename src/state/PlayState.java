@@ -242,19 +242,23 @@ public class PlayState extends State
 		{
 			if(i == 0)
 			{
-				visionIcons[i] = new VisionIcon(camera.getWidth() + 4,
-												32, 
-												buttonImages[4],
-												buttonImages[5], 
-												buttonImages[6]);
+				visionIcons[i] = new VisionIcon(
+						camera.getWidth() + 4,
+						32,
+						buttonImages[4],
+						buttonImages[5],
+						buttonImages[6]
+				);
 			}
 			else
 			{
-				visionIcons[i] = new VisionIcon(camera.getWidth() + 4,
-												visionIcons[i-1].getY() + visionIcons[i-1].getHeight() + 2, 
-												buttonImages[4],
-												buttonImages[5], 
-												buttonImages[6]);
+				visionIcons[i] = new VisionIcon(
+						camera.getWidth() + 4,
+						visionIcons[i-1].getY() + visionIcons[i-1].getHeight() + 2, 
+						buttonImages[4],
+						buttonImages[5],
+						buttonImages[6]
+				);
 			}
 
 			visionIcons[i].setVisible(true);

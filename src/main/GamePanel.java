@@ -81,31 +81,32 @@ public class GamePanel extends JPanel implements Runnable, KeyListener
 			addKeyListener(this);
 			
 			//Add a MouseListener
-        	addMouseListener(new MouseAdapter()
-        	{
-        		public void mousePressed(MouseEvent e)
-        		{
-        			mouseManager.setPressedPoint(e.getX(), e.getY());
-        			mouseManager.setMousePressed(true);
-        			mouseManager.setMouseReleased(false);
-        		}
-        		
-        		public void mouseReleased(MouseEvent e)
-        		{
-        			mouseManager.setReleasedPoint(e.getX(), e.getY());
-        			mouseManager.setMouseReleased(true);
-        			mouseManager.setMousePressed(false);
-        		}
-        	});
-        	
-        	//Add a MouseMotionListener
-        	addMouseMotionListener(new MouseAdapter() 
-        	{
-        		public void mouseMoved(MouseEvent e)
-        		{
-        			mouseManager.setCurrentPoint(e.getX(), e.getY());
-        		}
-        	});
+			
+			addMouseListener(new MouseAdapter()
+			{
+				public void mousePressed(MouseEvent e)
+				{
+					mouseManager.setPressedPoint(e.getX(), e.getY());
+					mouseManager.setMousePressed(true);
+					mouseManager.setMouseReleased(false);
+				}
+				
+				public void mouseReleased(MouseEvent e)
+				{
+					mouseManager.setReleasedPoint(e.getX(), e.getY());
+					mouseManager.setMouseReleased(true);
+					mouseManager.setMousePressed(false);
+				}
+			});
+			
+			//Add a MouseMotionListener
+			addMouseMotionListener(new MouseAdapter() 
+			{
+				public void mouseMoved(MouseEvent e)
+				{
+					mouseManager.setCurrentPoint(e.getX(), e.getY());
+				}
+			});
 		}
 	}
 	
@@ -133,21 +134,21 @@ public class GamePanel extends JPanel implements Runnable, KeyListener
 			draw();
 			drawToScreen();
 			
-            //******* (START) Frame counting *******
-            
-            elapsed = (System.nanoTime() - start) / 1000000;
-            wait = TARGET_TIME - elapsed;
-            if(wait < 0)
-            {
-            	wait = TARGET_TIME;
-            }
-            
-            try{
-                Thread.sleep(wait);
-            }catch(Exception e){
-                
-            }
-            //******* (END) Frame counting *******
+			//******* (START) Frame counting *******
+			elapsed = (System.nanoTime() - start) / 1000000;
+			wait = TARGET_TIME - elapsed;
+			
+			if(wait < 0)
+			{
+				wait = TARGET_TIME;
+			}
+			
+			try{
+				Thread.sleep(wait);
+			}catch(Exception e){
+				
+			}
+			//******* (END) Frame counting *******
 		}
 	}
 	

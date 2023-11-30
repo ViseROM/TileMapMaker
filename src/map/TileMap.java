@@ -208,7 +208,7 @@ public class TileMap implements Serializable
 	 * @param g (Graphics2D) The Graphics2D object to be drawn on
 	 */
 	private void drawMap(Graphics2D g)
-	{		
+	{
 		//Draw tileMap
 		for(int i = startRow; i <= endRow ; i++)
 		{
@@ -216,16 +216,17 @@ public class TileMap implements Serializable
 			{
 				int x = (j - startCol) * tileSize + offSetX;
 				int y = (i - startRow) * tileSize + offSetY;
-				int index = map[i][j].getValue();
-						
+				int index = map[i][j].getValue();		
+				
 				if(index == 0)
 				{
 					continue;
 				}
-					//Draw tileImage
-					g.drawImage(images[index], x, y, null);
-				}
+				
+				//Draw tileImage
+				g.drawImage(images[index], x, y, null);
 			}
+		}
 	}
 	
 	/**

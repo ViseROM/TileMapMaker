@@ -1,7 +1,7 @@
 # TileMapMaker
 Project Title: TileMapMaker
 
-Version/Date: 0.1
+Version: 0.1
 
 Author: Vachia Thoj
 
